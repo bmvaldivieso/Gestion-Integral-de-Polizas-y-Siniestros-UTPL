@@ -1,20 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const btnLogout = document.getElementById('btnLogout');
-
-    // 1. Verificar si existe el token (Seguridad básica en cliente)
+    // 1. Verificación de Seguridad (Basada en tu código original)
     const token = localStorage.getItem('access_token');
     if (!token) {
-        window.location.href = '/login-analista/'; // Redirigir si no hay token
+        // Redirigir al login si no hay sesión activa
+        window.location.href = '/login-analista/'; 
     }
 
     // 2. Lógica de Cerrar Sesión
-    btnLogout.addEventListener('click', function() {
-        // Eliminar el token del almacenamiento
-        localStorage.removeItem('access_token');
-        
-        alert('Sesión cerrada correctamente');
-        
-        // Redirigir al login
-        window.location.href = '/login-analista/';
-    });
+    // El ID 'btnLogout' debe estar presente en el sidebar del masteradmin
+    const btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', function() {
+            localStorage.removeItem('access_token');
+            alert('Sesión cerrada correctamente');
+            window.location.href = '/login-analista/';
+        });
+    }
 });

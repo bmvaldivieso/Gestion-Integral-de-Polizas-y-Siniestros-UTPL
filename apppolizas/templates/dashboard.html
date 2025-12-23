@@ -1,22 +1,37 @@
+{% extends 'master/masteradmin.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard Analista</title>
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-</head>
-<body>
-    <nav class="navbar">
-        <h1>Sistema de Pólizas - Panel Analista</h1>
-        <button id="btnLogout" class="btn-logout">Cerrar Sesión</button>
-    </nav>
 
-    <main class="content">
-        <h2>Bienvenido, Analista</h2>
-        <p>Has iniciado sesión exitosamente con JWT.</p>
-    </main>
+{% block title %}Dashboard Analista{% endblock %}
 
-    <script src="{% static 'js/dashboard.js' %}"></script>
-</body>
-</html>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/gSide.css' %}" />
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+{% endblock %}
+
+{% block admin_content %}
+<div class="dashboard-scroll-container">
+    <div class="dashboard-summary-cards">
+        <div class="summary-card registered-users">
+            <div class="card-value">24</div>
+            <div class="card-title">Polizas</div>
+        </div>
+        <div class="summary-card registered-partners">
+            <div class="card-value">12</div>
+            <div class="card-title">Sinistros</div>
+        </div>
+    </div>
+
+    <div class="dashboard-sections">
+        <div class="chart-card">
+            <div class="card-header">
+                <h4>Polizas</h4>
+            </div>
+            <div class="bar-chart-container">
+                <div class="bar" style="height: 70%;"><span class="bar-label">Nro.1</span></div>
+                <div class="bar" style="height: 85%;"><span class="bar-label">Nro.2</span></div>
+                <div class="bar" style="height: 50%;"><span class="bar-label">Nro.2</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
