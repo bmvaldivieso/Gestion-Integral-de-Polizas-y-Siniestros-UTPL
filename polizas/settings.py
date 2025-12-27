@@ -79,7 +79,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',   
         'NAME': 'polizas',                      
         'USER': 'root',             
-        'PASSWORD': '123456789',      
+        'PASSWORD': '123456',      
         'HOST': 'localhost',                    
         'PORT': '3306',                         
         'OPTIONS': {
@@ -124,3 +124,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+AUTH_USER_MODEL = 'apppolizas.Usuario'
