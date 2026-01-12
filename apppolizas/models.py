@@ -205,6 +205,80 @@ class Factura(models.Model):
         super(Factura, self).save(*args, **kwargs)
 
     def __str__(self):
+<<<<<<< Updated upstream
         return f"Factura {self.numero_factura} - Póliza {self.poliza}"
 =======
 >>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
+=======
+        return f"Factura {self.numero_factura}"
+
+# --------------------------------------------------------
+# 7. SISTEMA DE ALERTAS Y NOTIFICACIONES
+# --------------------------------------------------------
+class Notificacion(models.Model):
+    """
+    Sistema de alertas basado en el TDR.
+    """
+    TIPO_ALERTA_CHOICES = [
+        ('VENCIMIENTO_POLIZA', 'Vencimiento de Póliza'),
+        ('PAGO_PENDIENTE', 'Pago por Realizar'),
+        ('SINIESTRO_DEMORA_DOC', 'Retraso Documentación Siniestro'),
+        ('SINIESTRO_RESPUESTA_ASEG', 'Retraso Respuesta Aseguradora'),
+        ('OTRO', 'Otro'),
+    ]
+    
+    ESTADO_CHOICES = [
+        ('PENDIENTE', 'Pendiente de Lectura'),
+        ('LEIDA', 'Leída'),
+        ('ENVIADA_CORREO', 'Enviada por Correo'),
+    ]
+
+    # Relación con tu modelo de Usuario
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='notificaciones')
+    mensaje = models.TextField()
+    
+    tipo_alerta = models.CharField(max_length=50, choices=TIPO_ALERTA_CHOICES)
+    fecha_emision = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=50, choices=ESTADO_CHOICES, default='PENDIENTE')
+    
+    enviado_por_correo = models.BooleanField(default=False)
+    
+    # Para guardar el ID de la Póliza (ej: "15") o Siniestro relacionado
+    id_referencia = models.CharField(max_length=50, null=True, blank=True)
+
+    def __str__(self):
+        return f"Alerta {self.id} - {self.tipo_alerta} para {self.usuario.username}"
+
+# ========================================================
+# 8. DOCUMENTOS DE SINIESTROS
+# ========================================================
+
+def ruta_documento_siniestro(instance, filename):
+    return f'siniestros/ID_{instance.siniestro.id}/{filename}'
+
+class DocumentoSiniestro(models.Model):
+    TIPO_DOCUMENTO = [
+        ('INFORME', 'Informe Técnico'),
+        ('DENUNCIA', 'Denuncia'),
+        ('FOTOS', 'Fotografías'),
+        ('FACTURA_REPARACION', 'Facturas Reparación'),
+        ('OTRO', 'Otros'),
+    ]
+
+    siniestro = models.ForeignKey(Siniestro, on_delete=models.CASCADE, related_name='documentos')
+    archivo = models.FileField(upload_to=ruta_documento_siniestro)
+    tipo = models.CharField(max_length=20, choices=TIPO_DOCUMENTO)
+    descripcion = models.CharField(max_length=200, blank=True, null=True)
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+    subido_por = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
+
+@receiver(post_delete, sender=DocumentoSiniestro)
+def eliminar_archivo_de_minio(sender, instance, **kwargs):
+    if instance.archivo:
+        instance.archivo.delete(save=False)
+
+@receiver(post_delete, sender=DocumentoPoliza)
+def eliminar_archivo_poliza(sender, instance, **kwargs):
+    if instance.archivo:
+        instance.archivo.delete(save=False)
+>>>>>>> Stashed changes

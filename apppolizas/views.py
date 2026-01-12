@@ -18,6 +18,7 @@ from apppolizas.models import Poliza, Siniestro, Factura
 from django.views.generic import DetailView
 
 
+<<<<<<< Updated upstream
 from .forms import PolizaForm, SiniestroPorPolizaForm, SiniestroForm, SiniestroEditForm, FacturaForm
 from .repositories import SiniestroRepository, UsuarioRepository
 from .services import AuthService, PolizaService, SiniestroService, FacturaService
@@ -36,6 +37,11 @@ from .forms import PolizaForm, SiniestroPorPolizaForm, SiniestroForm, SiniestroE
 from .repositories import SiniestroRepository, UsuarioRepository
 from .services import AuthService, PolizaService, SiniestroService
 >>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
+=======
+from .forms import PolizaForm, SiniestroPorPolizaForm, SiniestroForm, SiniestroEditForm, FacturaForm, DocumentoSiniestroForm, CustodioForm, FiniquitoForm
+from .repositories import SiniestroRepository, UsuarioRepository, FiniquitoRepository
+from .services import AuthService, PolizaService, SiniestroService, FacturaService, DocumentoService, CustodioService, FiniquitoService, NotificacionService
+>>>>>>> Stashed changes
 
 
 # =====================================================
@@ -216,7 +222,15 @@ class PolizaListView(LoginRequiredMixin, View):
         form = PolizaForm(request.POST)
         if form.is_valid():
             try:
-                PolizaService.crear_poliza(form.cleaned_data)
+                # 1. Obtenemos los datos del formulario
+                datos_poliza = form.cleaned_data
+                
+                # 2. ¡EL CAMBIO CLAVE! Inyectamos el usuario logueado
+                datos_poliza['usuario_gestor'] = request.user 
+                
+                # 3. Llamamos al servicio con los datos completos
+                PolizaService.crear_poliza(datos_poliza)
+                
                 messages.success(request, 'Póliza creada exitosamente')
                 return redirect('polizas_list')
             except Exception as e:
@@ -505,5 +519,217 @@ def generar_pdf_factura(request, factura_id):
        return HttpResponse(f'Error al generar PDF: <pre>{html}</pre>')
     
     return response
+<<<<<<< Updated upstream
 =======
 >>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
+=======
+
+
+
+
+
+# Vistas para gestión de documentos de siniestro
+class SubirEvidenciaView(LoginRequiredMixin, View):
+    
+    def post(self, request, siniestro_id):
+        form = DocumentoSiniestroForm(request.POST, request.FILES) # ¡Importante request.FILES!
+        
+        if form.is_valid():
+            try:
+                DocumentoService.subir_evidencia(
+                    siniestro_id=siniestro_id,
+                    data_form=form.cleaned_data,
+                    archivo=request.FILES['archivo'],
+                    usuario=request.user
+                )
+                messages.success(request, "Documento subido correctamente a MinIO.")
+            except ValidationError as e:
+                messages.error(request, str(e))
+            except Exception as e:
+                messages.error(request, "Error al subir el archivo.")
+        else:
+            messages.error(request, "Error en el formulario.")
+            
+        # Redirigir de vuelta al detalle del siniestro
+        return redirect('siniestro_detail', pk=siniestro_id)
+    
+
+class SiniestroDeleteEvidenciaView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol != 'analista':
+            return redirect('dashboard_analista')
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, pk):
+        # Buscamos el documento o damos error 404 si no existe
+        documento = get_object_or_404(DocumentoSiniestro, pk=pk)
+        
+        # Guardamos el ID del siniestro para volver ahí después de borrar
+        siniestro_id = documento.siniestro.id
+        
+        # Eliminamos el registro (y el archivo si está configurado en signals)
+        documento.delete()
+        
+        messages.success(request, 'Documento eliminado correctamente del expediente.')
+        return redirect('siniestro_detail', pk=siniestro_id)
+    
+
+class CustodioListView(LoginRequiredMixin, View):
+    template_name = 'custodios.html' # Crearemos este template en el paso 6
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol != 'analista':
+            return redirect('dashboard_analista')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        custodios = CustodioService.listar_custodios()
+        form = CustodioForm()
+        return render(request, self.template_name, {
+            'custodios': custodios, 
+            'form': form
+        })
+
+    def post(self, request):
+        form = CustodioForm(request.POST)
+        if form.is_valid():
+            try:
+                CustodioService.crear_custodio(form.cleaned_data)
+                messages.success(request, 'Custodio registrado exitosamente')
+                return redirect('custodios_list')
+            except Exception as e:
+                messages.error(request, f"Error al crear: {str(e)}")
+        
+        # Si falla, recargamos con errores
+        custodios = CustodioService.listar_custodios()
+        return render(request, self.template_name, {
+            'custodios': custodios, 
+            'form': form
+        })
+
+class CustodioUpdateView(LoginRequiredMixin, View):
+    template_name = 'custodio_edit.html' # Crearemos este template
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol != 'analista':
+            return redirect('dashboard_analista')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, pk):
+        try:
+            custodio = CustodioService.obtener_custodio(pk)
+            form = CustodioForm(instance=custodio)
+            return render(request, self.template_name, {'form': form, 'custodio': custodio})
+        except ValidationError:
+            return redirect('custodios_list')
+
+    def post(self, request, pk):
+        try:
+            custodio = CustodioService.obtener_custodio(pk)
+            form = CustodioForm(request.POST, instance=custodio)
+            if form.is_valid():
+                CustodioService.actualizar_custodio(pk, form.cleaned_data)
+                messages.success(request, 'Custodio actualizado')
+                return redirect('custodios_list')
+        except ValidationError as e:
+            messages.error(request, str(e))
+            
+        return render(request, self.template_name, {'form': form, 'custodio': custodio})
+
+class CustodioDeleteView(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.rol != 'analista':
+            return redirect('dashboard_analista')
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, pk):
+        try:
+            CustodioService.eliminar_custodio(pk)
+            messages.success(request, 'Custodio eliminado')
+        except ValidationError as e:
+            messages.error(request, str(e)) # Maneja el error si tiene siniestros
+        return redirect('custodios_list')
+
+class FiniquitoCreateView(LoginRequiredMixin, View):
+    template_name = 'finiquito_create.html'
+
+    def get(self, request, siniestro_id):
+        print(f"--- DEBUG: Entrando al GET de FiniquitoCreateView para Siniestro {siniestro_id} ---")
+        siniestro = SiniestroRepository.get_by_id(siniestro_id)
+        print(f"--- DEBUG: Resultado de búsqueda siniestro: {siniestro} ---")
+
+        # SEGURIDAD 1: Verificar que el siniestro existe
+        if not siniestro:
+            print(f"--- DEBUG: Siniestro {siniestro_id} no existe ---")
+            messages.error(request, "El siniestro no existe.")
+            return redirect('siniestros')
+
+        # SEGURIDAD 2: Verificar estado o existencia de finiquito
+        ya_tiene_finiquito = FiniquitoRepository.get_by_siniestro(siniestro_id)
+        print(f"--- DEBUG: ¿Ya tiene finiquito? {ya_tiene_finiquito} ---")
+
+        if siniestro.estado_tramite == 'LIQUIDADO' or ya_tiene_finiquito:
+            print(f"--- DEBUG: Siniestro {siniestro_id} ya liquidado o con finiquito existente ---")
+            messages.warning(request, "Este siniestro ya ha sido liquidado y no permite nuevas acciones.")
+            return redirect('siniestro_detail', pk=siniestro_id)
+
+        # Si pasa las validaciones, mostramos el formulario
+        form = FiniquitoForm(initial={'fecha_finiquito': date.today()})
+        print(f"--- DEBUG: Mostrando formulario de finiquito para siniestro {siniestro_id} ---")
+        return render(request, self.template_name, {
+            'form': form,
+            'siniestro': siniestro
+        })
+
+    def post(self, request, siniestro_id):
+        print(f"--- DEBUG: Recibiendo POST para Siniestro {siniestro_id} ---")
+        form = FiniquitoForm(request.POST, request.FILES)
+        print(f"--- DEBUG: Datos recibidos en POST: {request.POST} ---")
+        print(f"--- DEBUG: Archivos recibidos en POST: {request.FILES} ---")
+
+        if form.is_valid():
+            print(f"--- DEBUG: Formulario válido para Siniestro {siniestro_id} ---")
+            try:
+                # Llamamos al servicio para calcular y guardar
+                finiquito = FiniquitoService.liquidar_siniestro(
+                    siniestro_id=siniestro_id,
+                    data=form.cleaned_data,
+                    archivo_firmado=request.FILES.get('documento_firmado'),
+                    usuario=request.user
+                )
+                print(f"--- DEBUG: Finiquito creado correctamente: {finiquito} ---")
+                messages.success(request, f"Siniestro Liquidado. Valor a Pagar: ${finiquito.valor_final_pago}")
+                return redirect('siniestro_detail', pk=siniestro_id)
+
+            except ValidationError as e:
+                print(f"--- DEBUG: Error de validación al liquidar siniestro {siniestro_id}: {e} ---")
+                messages.error(request, str(e))
+        else:
+            print(f"--- DEBUG: Errores del formulario: {form.errors} ---")
+
+        siniestro = SiniestroRepository.get_by_id(siniestro_id)
+        print(f"--- DEBUG: Renderizando nuevamente formulario por error en POST para siniestro {siniestro_id} ---")
+        return render(request, self.template_name, {'form': form, 'siniestro': siniestro})
+    
+# ---------------------------------------------
+# NOTIFICACIONES
+# ---------------------------------------------
+
+def lista_notificaciones(request):
+    """Muestra todas las alertas del usuario logueado"""
+    # Asumiendo que usas el login_universal y 'request.user' tiene el usuario
+    # Si tu usuario está en request.session['usuario_id'], ajusta esto.
+    # Usaremos request.user suponiendo autenticación estándar de Django:
+    
+    notificaciones = NotificacionService.listar_mis_notificaciones(request.user)
+    
+    return render(request, 'lista_notificaciones.html', {
+        'notificaciones': notificaciones
+    })
+
+def marcar_notificacion_leida(request, notificacion_id):
+    """Acción para marcar leída y redirigir"""
+    NotificacionService.leer_notificacion(notificacion_id, request.user)
+    messages.success(request, "Notificación marcada como leída.")
+    return redirect('lista_notificaciones')
+>>>>>>> Stashed changes

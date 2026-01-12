@@ -80,8 +80,25 @@
             </a>
         </li>
 
+<<<<<<< Updated upstream
 =======
 >>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
+=======
+        <li class="{% if 'custodio' in request.resolver_match.url_name %}activo{% endif %}">
+          <a href="{% url 'custodios_list' %}">
+            <i class="fas fa-users icono-svg" style="font-size: 1.2rem; margin-right: 10px;"></i>
+              Custodios
+          </a>
+        </li>
+
+        <li class="{% if 'notificaciones' in request.resolver_match.url_name %}activo{% endif %}">
+          <a href="{% url 'lista_notificaciones' %}">
+            <i class="fas fa-bell" style="font-size: 20px; margin-right: 10px; width: 24px; text-align: center;"></i>
+              Notificaciones
+          </a>
+        </li>
+
+>>>>>>> Stashed changes
       </ul>
     </nav>
 
@@ -112,8 +129,12 @@
   {% block extra_js %}{% endblock %}
 
 </body>
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 </html>
 =======
 </html>
 >>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
+=======
+</html>
+>>>>>>> Stashed changes

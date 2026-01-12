@@ -1,9 +1,14 @@
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 from .models import Usuario, Poliza, Siniestro, Factura
 =======
 from .models import Usuario, Poliza, Siniestro
 >>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
 
+=======
+from .models import Usuario, Poliza, Siniestro, Factura, DocumentoSiniestro, ResponsableCustodio, Finiquito, Notificacion
+from django.shortcuts import get_object_or_404
+>>>>>>> Stashed changes
 
 class UsuarioRepository:
     """Repositorio para operaciones de acceso a datos de Usuario"""
@@ -132,5 +137,117 @@ class FacturaRepository:
         # Al usar create(), Django llama internamente a save(), 
         # por lo que tus cálculos automáticos (IVA, descuentos) SE EJECUTARÁN.
         return Factura.objects.create(**data)
+<<<<<<< Updated upstream
 =======
 >>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
+=======
+
+
+
+
+# DocumentoSiniestroRepository
+
+class DocumentoRepository:
+    
+    @staticmethod
+    def create(data, archivo, usuario):
+        """
+        Crea el registro en BD. 
+        Nota: Django maneja la subida a MinIO automáticamente al llamar a .create() 
+        gracias a la configuración del settings.py.
+        """
+        return DocumentoSiniestro.objects.create(
+            siniestro=data['siniestro'],
+            tipo=data['tipo'],
+            descripcion=data.get('descripcion', ''),
+            archivo=archivo, # El objeto archivo en memoria
+            subido_por=usuario
+        )
+
+    @staticmethod
+    def get_by_siniestro(siniestro_id):
+        return DocumentoSiniestro.objects.filter(siniestro_id=siniestro_id).order_by('-fecha_subida')
+
+    @staticmethod
+    def delete(documento_id):
+        # Al borrar el registro, django-storages también intenta borrar el archivo en MinIO
+        return DocumentoSiniestro.objects.filter(id=documento_id).delete()
+    
+
+class CustodioRepository:
+    """Repositorio para gestión de Responsables/Custodios"""
+
+    @staticmethod
+    def get_all():
+        return ResponsableCustodio.objects.all().order_by('nombre_completo')
+
+    @staticmethod
+    def get_by_id(custodio_id):
+        try:
+            return ResponsableCustodio.objects.get(id=custodio_id)
+        except ResponsableCustodio.DoesNotExist:
+            return None
+
+    @staticmethod
+    def create(data):
+        return ResponsableCustodio.objects.create(**data)
+
+    @staticmethod
+    def update(custodio, data):
+        for field, value in data.items():
+            setattr(custodio, field, value)
+        custodio.save()
+        return custodio
+
+    @staticmethod
+    def delete(custodio_id):
+        return ResponsableCustodio.objects.filter(id=custodio_id).delete()
+
+class FiniquitoRepository:
+    """Repositorio para manejo de Finiquitos (Cierre de Siniestros)"""
+
+    @staticmethod
+    def create(datos_finiquito):
+        """
+        Crea el registro de finiquito.
+        Nota: Los cálculos ya deben venir listos desde el Servicio.
+        """
+        return Finiquito.objects.create(**datos_finiquito)
+
+    @staticmethod
+    def get_by_siniestro(siniestro_id):
+        """Busca si existe un finiquito para un siniestro dado"""
+        try:
+            return Finiquito.objects.get(siniestro_id=siniestro_id)
+        except Finiquito.DoesNotExist:
+            return None
+
+class NotificacionRepository:
+    """Repositorio para gestión de Notificaciones"""
+
+    @staticmethod
+    def crear(data):
+        return Notificacion.objects.create(**data)
+
+    @staticmethod
+    def get_by_usuario(usuario):
+        # Devuelve primero las más nuevas
+        return Notificacion.objects.filter(usuario=usuario).order_by('-fecha_emision')
+
+    @staticmethod
+    def get_pendientes_count(usuario):
+        return Notificacion.objects.filter(usuario=usuario, estado='PENDIENTE').count()
+
+    @staticmethod
+    def get_by_id(notificacion_id):
+        try:
+            return Notificacion.objects.get(id=notificacion_id)
+        except Notificacion.DoesNotExist:
+            return None
+
+    @staticmethod
+    def marcar_como_leida(notificacion):
+        notificacion.estado = 'LEIDA'
+        notificacion.save()
+        return notificacion
+>>>>>>> Stashed changes

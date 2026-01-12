@@ -79,11 +79,15 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',   
         'NAME': 'polizas',                      
         'USER': 'root',             
+<<<<<<< Updated upstream
 <<<<<<< HEAD
         'PASSWORD': 'jose2004',      
 =======
         'PASSWORD': 'UTPL2023',      
 >>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
+=======
+        'PASSWORD': 'jose2004',      
+>>>>>>> Stashed changes
         'HOST': 'localhost',                    
         'PORT': '3306',                         
         'OPTIONS': {

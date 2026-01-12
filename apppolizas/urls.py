@@ -18,6 +18,17 @@ from .views import (
     lista_facturas,
     crear_factura,
     generar_pdf_factura,
+<<<<<<< Updated upstream
+=======
+    SubirEvidenciaView,
+    SiniestroDeleteEvidenciaView, 
+    CustodioListView, 
+    CustodioUpdateView, 
+    CustodioDeleteView,
+    FiniquitoCreateView,
+    lista_notificaciones,
+    marcar_notificacion_leida,
+>>>>>>> Stashed changes
 )
 
 =======
@@ -65,6 +76,7 @@ urlpatterns = [
 
     # Logout
     path('logout/', logout_view, name='logout'),
+<<<<<<< Updated upstream
 ]
 =======
 
@@ -72,3 +84,24 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
 ]
 >>>>>>> 023cea205f0f0fa6e2fc75d4401f28287856a05b
+=======
+
+    # Subida de evidencia para siniestros
+    path('siniestros/<int:siniestro_id>/subir-evidencia/', SubirEvidenciaView.as_view(), name='subir_evidencia'),
+    path('documentos/<int:pk>/eliminar/', SiniestroDeleteEvidenciaView.as_view(), name='eliminar_evidencia'),
+
+    # GESTIÓN DE CUSTODIOS
+    path('custodios/', CustodioListView.as_view(), name='custodios_list'),
+    path('custodios/editar/<int:pk>/', CustodioUpdateView.as_view(), name='custodio_update'),
+    path('custodios/eliminar/<int:pk>/', CustodioDeleteView.as_view(), name='custodio_delete'),
+
+    # GESTIÓN DE FINIQUITOS
+    path('siniestros/<int:siniestro_id>/finiquitar/', FiniquitoCreateView.as_view(), name='crear_finiquito'),
+
+    
+    # GESTIÓN DE NOTIFICACIONES
+    
+    path('notificaciones/', lista_notificaciones, name='lista_notificaciones'),
+    path('notificaciones/leer/<int:notificacion_id>/', marcar_notificacion_leida, name='marcar_notificacion_leida'),
+]
+>>>>>>> Stashed changes
