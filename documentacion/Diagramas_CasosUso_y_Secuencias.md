@@ -1,3 +1,8 @@
+
+DIAGRAMAS DE CASOS DE USO 
+
+
+
 <img width="700" height="639" alt="image" src="https://github.com/user-attachments/assets/9f39029e-1d04-4bcb-820c-7162221acecb" />
 
 
@@ -106,6 +111,7 @@ Módulo exclusivo para el rol de Administrador, enfocado en el mantenimiento de 
 ### Funcionalidades Clave
 * **Gestión de Usuarios:** Control total (Crear, Editar, Eliminar) sobre los accesos al sistema.
 * **Reportaría:** Generación de Reportes Generales en PDF. Este proceso incluye obligatoriamente la compilación de estadísticas globales (siniestros totales, montos pagados, etc.) para ofrecer una visión macro del estado del negocio.
+
 
 
 
