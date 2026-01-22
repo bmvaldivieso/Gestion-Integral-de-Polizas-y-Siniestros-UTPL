@@ -35,9 +35,11 @@ El sistema sigue un flujo unidirectional donde el cliente envía solicitudes HTT
   
 - **Email**: Servicio de notificaciones automáticas integrado en la capa de negocio para alertas de facturación y eventos del sistema.
 
+  
+# Diagrama de Paquetes
 <img width="1268" height="1261" alt="image" src="https://github.com/user-attachments/assets/fd40209d-2f36-4e9f-81fc-573c0bf1dfd2" />
 
-# Arquitectura General del Sistema
+# Descripción del Diagrama de Paquetes
 
 El sistema de gestión de pólizas y siniestros implementa una **arquitectura de tres capas estricta** con separación de responsabilidades, construida sobre el framework **Django**.  
 Esta estructura garantiza **mantenibilidad, testabilidad y escalabilidad** del código.
@@ -153,6 +155,7 @@ La estructura modular del sistema permite:
 - **Responsabilidades bien definidas por capa**  
 
 La arquitectura impide accesos directos no autorizados a la base de datos desde las vistas o uso del ORM desde los servicios.
+
 
 
 
