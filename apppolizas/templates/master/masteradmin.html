@@ -33,7 +33,14 @@
       <div class="imagen-redonda">
         <img src="{% static 'images/perfil.jpg' %}" alt="Usuario" class="foto-perfil">
       </div>
-      <p class="nombre-usuario">{{ user.get_full_name }}</p>
+      <p class="nombre-usuario">
+        {% if user.get_full_name %}
+          {{ user.get_full_name }}
+        {% else %}
+          {{ user.username|title }}
+        {% endif %}
+        <span class="rol-usuario">({{ user.rol|title }})</span>
+      </p>
     </div>
 
     <nav class="navbar-menu">
@@ -60,9 +67,13 @@
         {% endif %}
 
       </ul>
+    </nav>
     
-    <button type="button" id="btnLogout" class="boton"
-      style="margin-right: 80px; margin-bottom: 20px; margin-left: 32px;">
+    <!-- Espacio flexible para empujar el botón hacia abajo -->
+    <div class="flex-grow-1"></div>
+    
+    <!-- Botón de Cerrar Sesión al final -->
+    <button type="button" id="btnLogout" class="boton">
       Cerrar Sesión
     </button>
   </aside>
