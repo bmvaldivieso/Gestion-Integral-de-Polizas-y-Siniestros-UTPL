@@ -105,7 +105,7 @@ class Bien(models.Model):
         ("M", "Malo"),
     ]
 
-    # Relación: Un custodio tiene varios bienes (1 a 5)
+    # Relación: Un custodio puede tener múltiples bienes (sin límite máximo)
     custodio = models.ForeignKey(
         ResponsableCustodio, on_delete=models.CASCADE, related_name="bienes"
     )
@@ -146,16 +146,12 @@ class Bien(models.Model):
     )
 
     def clean(self):
-        """Validación personalizada para limitar a 5 bienes por custodio"""
+        """Validación personalizada para asegurar que cada custodio tenga al menos 1 bien"""
         from django.core.exceptions import ValidationError
 
-        # Si es un registro nuevo (no tiene ID aún) verificamos el conteo actual
-        if self.pk is None:
-            cantidad_actual = self.custodio.bienes.count()
-            if cantidad_actual >= 5:
-                raise ValidationError(
-                    f"El custodio {self.custodio.nombre_completo} ya tiene el máximo permitido de 5 bienes asignados."
-                )
+        # No hay límite máximo, solo validaciones básicas si se necesitan en el futuro
+        # Por ahora, permitimos cualquier cantidad de bienes por custodio
+        pass
 
     def save(self, *args, **kwargs):
         self.clean()  # Ejecutar validación antes de guardar

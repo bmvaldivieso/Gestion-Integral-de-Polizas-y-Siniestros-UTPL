@@ -28,6 +28,8 @@ from .services import (AuthService, BienService, CustodioService,
                        DocumentoService, FacturaService, FiniquitoService,
                        NotificacionService, PolizaService, SiniestroService)
 
+from django.db.models import Count, Q
+from .models import Usuario                     
 
 # =====================================================
 # LOGOUT
@@ -92,8 +94,80 @@ class DashboardAdminView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # -----------------------------
+        # Datos generales
+        # -----------------------------
         context["total_usuarios"] = UsuarioRepository.get_all_usuarios().count()
         context["total_polizas"] = PolizaService.listar_polizas().count()
+
+        # -----------------------------
+        # Analistas
+        # -----------------------------
+        context["total_analistas"] = Usuario.objects.filter(rol="analista").count()
+        context["analistas_activos"] = Usuario.objects.filter(
+            rol="analista",
+            is_active=True
+        ).count()
+
+        # -----------------------------
+        # Top 5 analistas con más siniestros
+        # -----------------------------
+        context["top_analistas_siniestros"] = (
+            Siniestro.objects
+            .filter(usuario_gestor__rol="analista")
+            .values("usuario_gestor__username")  # Agrupamos solo por username
+            .annotate(count=Count("id"))
+            .order_by("-count")[:5]
+        )
+
+        # -----------------------------
+        # Siniestros por estado
+        # -----------------------------
+        context["siniestros_por_estado"] = list(
+            Siniestro.objects
+            .filter(usuario_gestor__rol="analista")
+            .values("estado_tramite")
+            .annotate(count=Count("id"))
+            .order_by("estado_tramite")
+        )
+
+        # -----------------------------
+        # Analistas por departamento
+        # -----------------------------
+        if hasattr(Usuario, "departamento"):
+            context["analistas_por_departamento"] = list(
+                Usuario.objects
+                .filter(rol="analista")
+                .values("departamento")
+                .annotate(count=Count("id"))
+                .order_by("-count")
+            )
+        else:
+            context["analistas_por_departamento"] = []
+
+        # -----------------------------
+        # Estadísticas de siniestros
+        # -----------------------------
+        context["total_siniestros_analistas"] = Siniestro.objects.filter(
+            usuario_gestor__rol="analista"
+        ).count()
+
+        context["siniestros_liquidados_analistas"] = Siniestro.objects.filter(
+            usuario_gestor__rol="analista",
+            estado_tramite="LIQUIDADO"
+        ).count()
+
+        # -----------------------------
+        # Actividad reciente
+        # -----------------------------
+        context["actividad_reciente_analistas"] = (
+            Siniestro.objects
+            .filter(usuario_gestor__rol="analista")
+            .select_related("usuario_gestor", "bien", "poliza")
+            .order_by("-fecha_siniestro")[:10]
+        )
+
         return context
 
 
