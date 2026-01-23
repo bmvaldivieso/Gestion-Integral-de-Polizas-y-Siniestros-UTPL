@@ -1,5 +1,5 @@
 
-DIAGRAMAS DE CASOS DE USO 
+# DIAGRAMAS DE CASOS DE USO 
 
 
 
@@ -350,6 +350,7 @@ Implementa CRUD completo para gestión de usuarios del sistema, accesible solo p
 * Todas las operaciones requieren autenticación.
 * Validaciones de integridad referencial.
 * CSRF exempt para API endpoints.
+
 
 
 
