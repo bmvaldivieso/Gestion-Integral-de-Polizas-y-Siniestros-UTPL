@@ -16,20 +16,41 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, TemplateView, View
 from xhtml2pdf import pisa
 
-from apppolizas.models import (Bien, DocumentoSiniestro, Factura, Poliza,
-                               ResponsableCustodio, Siniestro)
+from apppolizas.models import (
+    Bien,
+    DocumentoSiniestro,
+    Factura,
+    Poliza,
+    ResponsableCustodio,
+    Siniestro,
+)
 
-from .forms import (CustodioForm, DocumentoSiniestroForm, FacturaForm,
-                    FiniquitoForm, PolizaForm, SiniestroEditForm,
-                    SiniestroForm, SiniestroPorPolizaForm)
-from .repositories import (FiniquitoRepository, SiniestroRepository,
-                           UsuarioRepository)
-from .services import (AuthService, BienService, CustodioService,
-                       DocumentoService, FacturaService, FiniquitoService,
-                       NotificacionService, PolizaService, SiniestroService)
+from .forms import (
+    CustodioForm,
+    DocumentoSiniestroForm,
+    FacturaForm,
+    FiniquitoForm,
+    PolizaForm,
+    SiniestroEditForm,
+    SiniestroForm,
+    SiniestroPorPolizaForm,
+)
+from .repositories import FiniquitoRepository, SiniestroRepository, UsuarioRepository
+from .services import (
+    AuthService,
+    BienService,
+    CustodioService,
+    DocumentoService,
+    FacturaService,
+    FiniquitoService,
+    NotificacionService,
+    PolizaService,
+    SiniestroService,
+)
 
 from django.db.models import Count, Q
-from .models import Usuario                     
+from .models import Usuario
+
 
 # =====================================================
 # LOGOUT
@@ -106,16 +127,14 @@ class DashboardAdminView(LoginRequiredMixin, TemplateView):
         # -----------------------------
         context["total_analistas"] = Usuario.objects.filter(rol="analista").count()
         context["analistas_activos"] = Usuario.objects.filter(
-            rol="analista",
-            is_active=True
+            rol="analista", is_active=True
         ).count()
 
         # -----------------------------
         # Top 5 analistas con más siniestros
         # -----------------------------
         context["top_analistas_siniestros"] = (
-            Siniestro.objects
-            .filter(usuario_gestor__rol="analista")
+            Siniestro.objects.filter(usuario_gestor__rol="analista")
             .values("usuario_gestor__username")  # Agrupamos solo por username
             .annotate(count=Count("id"))
             .order_by("-count")[:5]
@@ -125,8 +144,7 @@ class DashboardAdminView(LoginRequiredMixin, TemplateView):
         # Siniestros por estado
         # -----------------------------
         context["siniestros_por_estado"] = list(
-            Siniestro.objects
-            .filter(usuario_gestor__rol="analista")
+            Siniestro.objects.filter(usuario_gestor__rol="analista")
             .values("estado_tramite")
             .annotate(count=Count("id"))
             .order_by("estado_tramite")
@@ -137,8 +155,7 @@ class DashboardAdminView(LoginRequiredMixin, TemplateView):
         # -----------------------------
         if hasattr(Usuario, "departamento"):
             context["analistas_por_departamento"] = list(
-                Usuario.objects
-                .filter(rol="analista")
+                Usuario.objects.filter(rol="analista")
                 .values("departamento")
                 .annotate(count=Count("id"))
                 .order_by("-count")
@@ -154,16 +171,14 @@ class DashboardAdminView(LoginRequiredMixin, TemplateView):
         ).count()
 
         context["siniestros_liquidados_analistas"] = Siniestro.objects.filter(
-            usuario_gestor__rol="analista",
-            estado_tramite="LIQUIDADO"
+            usuario_gestor__rol="analista", estado_tramite="LIQUIDADO"
         ).count()
 
         # -----------------------------
         # Actividad reciente
         # -----------------------------
         context["actividad_reciente_analistas"] = (
-            Siniestro.objects
-            .filter(usuario_gestor__rol="analista")
+            Siniestro.objects.filter(usuario_gestor__rol="analista")
             .select_related("usuario_gestor", "bien", "poliza")
             .order_by("-fecha_siniestro")[:10]
         )
@@ -1114,8 +1129,8 @@ def buscar_bienes_ajax(request):
 
 class ReporteGeneralPDFView(LoginRequiredMixin, View):
     def dispatch(self, request, *args, **kwargs):
-        if request.user.rol != 'admin':
-            return redirect('dashboard_analista')
+        if request.user.rol != "admin":
+            return redirect("dashboard_analista")
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request):
@@ -1132,26 +1147,26 @@ class ReporteGeneralPDFView(LoginRequiredMixin, View):
             numeros_polizas = [s.poliza.numero_poliza for s in siniestros]
             # Contamos cual se repite más
             conteo = Counter(numeros_polizas).most_common(1)
-            
+
             if conteo:
-                poliza_top = conteo[0][0] # El nombre (ej. POL-004)
-                cantidad_top = conteo[0][1] # La cantidad (ej. 3)
+                poliza_top = conteo[0][0]  # El nombre (ej. POL-004)
+                cantidad_top = conteo[0][1]  # La cantidad (ej. 3)
         # -----------------------------------------------------
 
         # 3. Definir el template y el contexto
-        template_path = 'administrador/reporte_general_pdf.html'
+        template_path = "administrador/reporte_general_pdf.html"
         context = {
-            'polizas': polizas,
-            'siniestros': siniestros,
-            'usuario': request.user,
+            "polizas": polizas,
+            "siniestros": siniestros,
+            "usuario": request.user,
             # Pasamos los datos nuevos al HTML:
-            'poliza_mas_siniestrada': poliza_top,
-            'total_reclamos_top': cantidad_top
+            "poliza_mas_siniestrada": poliza_top,
+            "total_reclamos_top": cantidad_top,
         }
 
         # 4. Renderizar y crear el PDF
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'inline; filename="reporte_general.pdf"'
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = 'inline; filename="reporte_general.pdf"'
 
         template = get_template(template_path)
         html = template.render(context)
@@ -1159,6 +1174,8 @@ class ReporteGeneralPDFView(LoginRequiredMixin, View):
         pisa_status = pisa.CreatePDF(html, dest=response)
 
         if pisa_status.err:
-            return HttpResponse('Hubo un error al generar el reporte PDF <pre>' + html + '</pre>')
-        
+            return HttpResponse(
+                "Hubo un error al generar el reporte PDF <pre>" + html + "</pre>"
+            )
+
         return response

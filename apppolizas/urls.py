@@ -1,18 +1,38 @@
 from django.urls import path
 
-from .views import (AdminUsuariosView, BienDetailApiView,
-                    BienesPorCustodioView, CustodioDetailApiView,
-                    CustodioListView, DashboardAdminView,
-                    DashboardAnalistaView, EnviarAseguradoraView,
-                    FiniquitoCreateView, LoginView, PolizaDeleteView,
-                    PolizaDetailView, PolizaListView, PolizaUpdateView,
-                    RepararSiniestroView, SiniestroDeleteEvidenciaView,
-                    SiniestroDeleteView, SiniestroDetailView,
-                    SiniestroEditView, SiniestroListView, SubirEvidenciaView,
-                    UsuarioCRUDView, buscar_bienes_ajax, buscar_custodios_ajax,
-                    crear_factura, generar_pdf_factura, lista_facturas,
-                    lista_notificaciones, logout_view,
-                    marcar_notificacion_leida, ReporteGeneralPDFView) 
+from .views import (
+    AdminUsuariosView,
+    BienDetailApiView,
+    BienesPorCustodioView,
+    CustodioDetailApiView,
+    CustodioListView,
+    DashboardAdminView,
+    DashboardAnalistaView,
+    EnviarAseguradoraView,
+    FiniquitoCreateView,
+    LoginView,
+    PolizaDeleteView,
+    PolizaDetailView,
+    PolizaListView,
+    PolizaUpdateView,
+    RepararSiniestroView,
+    SiniestroDeleteEvidenciaView,
+    SiniestroDeleteView,
+    SiniestroDetailView,
+    SiniestroEditView,
+    SiniestroListView,
+    SubirEvidenciaView,
+    UsuarioCRUDView,
+    buscar_bienes_ajax,
+    buscar_custodios_ajax,
+    crear_factura,
+    generar_pdf_factura,
+    lista_facturas,
+    lista_notificaciones,
+    logout_view,
+    marcar_notificacion_leida,
+    ReporteGeneralPDFView,
+)
 
 urlpatterns = [
     path("", LoginView.as_view(), name="login"),
@@ -27,11 +47,13 @@ urlpatterns = [
     ),
     # Admin
     path("administrador/usuarios/", AdminUsuariosView.as_view(), name="admin_usuarios"),
-    
     # --- 2. NUEVA RUTA REPORTE PDF ---
-    path("administrador/reporte-general/", ReporteGeneralPDFView.as_view(), name="reporte_general_pdf"),
+    path(
+        "administrador/reporte-general/",
+        ReporteGeneralPDFView.as_view(),
+        name="reporte_general_pdf",
+    ),
     # ---------------------------------
-
     # API Usuarios
     path("api/usuarios/", UsuarioCRUDView.as_view(), name="usuarios_list_create"),
     path(
