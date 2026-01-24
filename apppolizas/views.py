@@ -1,13 +1,13 @@
 import json
+from collections import Counter
 from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
-from collections import Counter
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template
@@ -35,6 +35,7 @@ from .forms import (
     SiniestroForm,
     SiniestroPorPolizaForm,
 )
+from .models import Usuario
 from .repositories import FiniquitoRepository, SiniestroRepository, UsuarioRepository
 from .services import (
     AuthService,
@@ -47,9 +48,6 @@ from .services import (
     PolizaService,
     SiniestroService,
 )
-
-from django.db.models import Count, Q
-from .models import Usuario
 
 
 # =====================================================

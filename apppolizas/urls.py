@@ -16,6 +16,7 @@ from .views import (
     PolizaListView,
     PolizaUpdateView,
     RepararSiniestroView,
+    ReporteGeneralPDFView,
     SiniestroDeleteEvidenciaView,
     SiniestroDeleteView,
     SiniestroDetailView,
@@ -31,7 +32,6 @@ from .views import (
     lista_notificaciones,
     logout_view,
     marcar_notificacion_leida,
-    ReporteGeneralPDFView,
 )
 
 urlpatterns = [
