@@ -7,6 +7,7 @@ from .models import (
     Factura,
     Finiquito,
     Poliza,
+    ReporteExterno,
     ResponsableCustodio,
     Siniestro,
 )
@@ -493,3 +494,64 @@ class FiniquitoForm(forms.ModelForm):
             "valor_depreciacion": "Depreciación (-)",
             "documento_firmado": "Acta de Finiquito Firmada (PDF)",
         }
+
+
+# ========================================================
+# FORMULARIO DE REPORTE EXTERNO
+# ========================================================
+
+class ReporteExternoForm(forms.ModelForm):
+    """Formulario para que usuarios externos reporten siniestros"""
+    
+    class Meta:
+        model = ReporteExterno
+        fields = [
+            'nombre_reportante', 'email_reportante', 'telefono_reportante',
+            'nombre_bien', 'codigo_activo', 'marca_bien', 'modelo_bien', 'serie_bien',
+            'fecha_siniestro', 'tipo_siniestro', 'ubicacion_siniestro', 'causa_siniestro',
+            'nombre_custodio'
+        ]
+        
+        widgets = {
+            'nombre_reportante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre completo'}),
+            'email_reportante': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'correo@ejemplo.com'}),
+            'telefono_reportante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0991234567'}),
+            'nombre_bien': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Laptop Dell Latitude'}),
+            'codigo_activo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: ACT-001234'}),
+            'marca_bien': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Dell'}),
+            'modelo_bien': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Latitude 5420'}),
+            'serie_bien': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: DL123456789'}),
+            'fecha_siniestro': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'tipo_siniestro': forms.Select(attrs={'class': 'form-select'}),
+            'ubicacion_siniestro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Oficina 301, Edificio A'}),
+            'causa_siniestro': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Describa detalladamente lo ocurrido...'}),
+            'nombre_custodio': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del responsable del bien'}),
+        }
+        
+        labels = {
+            'nombre_reportante': 'Nombre del Reportante',
+            'email_reportante': 'Correo Electrónico',
+            'telefono_reportante': 'Teléfono de Contacto',
+            'nombre_bien': 'Nombre del Bien',
+            'codigo_activo': 'Código de Activo',
+            'marca_bien': 'Marca',
+            'modelo_bien': 'Modelo',
+            'serie_bien': 'Número de Serie',
+            'fecha_siniestro': 'Fecha del Siniestro',
+            'tipo_siniestro': 'Tipo de Siniestro',
+            'ubicacion_siniestro': 'Ubicación del Siniestro',
+            'causa_siniestro': 'Causa del Siniestro',
+            'nombre_custodio': 'Responsable del Bien',
+        }
+    
+    def clean_email_reportante(self):
+        email = self.cleaned_data.get('email_reportante')
+        if email and '@' not in email:
+            raise forms.ValidationError('Ingrese un correo electrónico válido.')
+        return email
+    
+    def clean_telefono_reportante(self):
+        telefono = self.cleaned_data.get('telefono_reportante')
+        if telefono and len(telefono) < 7:
+            raise forms.ValidationError('Ingrese un número de teléfono válido.')
+        return telefono

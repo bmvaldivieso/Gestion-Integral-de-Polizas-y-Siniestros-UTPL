@@ -9,8 +9,8 @@
   <!-- Header Section -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h3 class="fw-bold text-dark mb-1">Panel de Control</h3>
-      <p class="text-muted mb-0">Resumen operativo del sistema.</p>
+      <h3 class="fw-bold text-dark mb-1">Panel de Control - Analista</h3>
+      <p class="text-muted mb-0">Bienvenido, {{ user.get_full_name|default:user.username }}. Resumen operativo del sistema.</p>
     </div>
     <div class="d-flex gap-2">
       <a href="{% url 'polizas_list' %}" class="btn btn-primary shadow-sm">
@@ -22,8 +22,60 @@
     </div>
   </div>
 
+  <!-- Alertas de Notificaciones -->
+  {% if notificaciones_no_leidas > 0 %}
+  <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+    <i class="fas fa-bell me-2"></i>
+    <strong>Tienes {{ notificaciones_no_leidas }} notificación(es) sin leer.</strong>
+    <a href="{% url 'lista_notificaciones' %}" class="alert-link">Ver notificaciones</a>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endif %}
+
   <!-- Summary Cards Row -->
   <div class="row g-4 mb-4">
+    <!-- Reportes Externos Pendientes -->
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #ff6b6b !important;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-uppercase text-muted small fw-bold mb-1">Reportes Externos</p>
+              <h2 class="fw-bold text-danger mb-0">{{ reportes_externos_pendientes }}</h2>
+              <small class="text-muted">Pendientes de revisión</small>
+            </div>
+            <div class="bg-danger bg-opacity-10 p-3 rounded-circle">
+              <i class="fas fa-envelope-open-text text-danger fs-4"></i>
+            </div>
+          </div>
+          <a href="{% url 'reportes_externos_list' %}" class="text-decoration-none small text-muted mt-3 d-block">
+            Revisar reportes <i class="fas fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Siniestros Pendientes -->
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #ffc107 !important;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-uppercase text-muted small fw-bold mb-1">Siniestros Activos</p>
+              <h2 class="fw-bold text-warning mb-0">{{ siniestros_pendientes }}</h2>
+              <small class="text-muted">En proceso/revisión</small>
+            </div>
+            <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+              <i class="fas fa-hourglass-half text-warning fs-4"></i>
+            </div>
+          </div>
+          <a href="{% url 'siniestros' %}" class="text-decoration-none small text-muted mt-3 d-block">
+            Gestionar siniestros <i class="fas fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
     <!-- Pólizas Activas -->
     <div class="col-md-3">
       <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #198754 !important;">
@@ -32,6 +84,7 @@
             <div>
               <p class="text-uppercase text-muted small fw-bold mb-1">Pólizas Activas</p>
               <h2 class="fw-bold text-success mb-0">{{ total_activas }}</h2>
+              <small class="text-muted">Vigentes actualmente</small>
             </div>
             <div class="bg-success bg-opacity-10 p-3 rounded-circle">
               <i class="fas fa-shield-alt text-success fs-4"></i>
@@ -44,45 +97,85 @@
       </div>
     </div>
 
-    <!-- Siniestros Totales -->
+    <!-- Bienes Activos -->
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #dc3545 !important;">
+      <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #0d6efd !important;">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="text-uppercase text-muted small fw-bold mb-1">Siniestros</p>
-              <h2 class="fw-bold text-danger mb-0">{{ total_siniestros }}</h2>
+              <p class="text-uppercase text-muted small fw-bold mb-1">Bienes Activos</p>
+              <h2 class="fw-bold text-primary mb-0">{{ total_bienes }}</h2>
+              <small class="text-muted">{{ total_custodios }} custodios</small>
             </div>
-            <div class="bg-danger bg-opacity-10 p-3 rounded-circle">
-              <i class="fas fa-car-crash text-danger fs-4"></i>
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+              <i class="fas fa-laptop text-primary fs-4"></i>
             </div>
           </div>
-          <a href="{% url 'siniestros' %}" class="text-decoration-none small text-muted mt-3 d-block">
-            Gestionar reclamos <i class="fas fa-arrow-right ms-1"></i>
+          <a href="{% url 'custodios_list' %}" class="text-decoration-none small text-muted mt-3 d-block">
+            Gestionar bienes <i class="fas fa-arrow-right ms-1"></i>
           </a>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Pólizas Vencidas -->
+  <!-- Second Row - Additional Stats -->
+  <div class="row g-4 mb-4">
+    <!-- Pólizas por Vencer -->
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #ffc107 !important;">
+      <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #fd7e14 !important;">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <p class="text-uppercase text-muted small fw-bold mb-1">Por Vencer</p>
-              <h2 class="fw-bold text-warning mb-0">{{ total_vencidas }}</h2>
+              <p class="text-uppercase text-muted small fw-bold mb-1">Por Vencer (30d)</p>
+              <h2 class="fw-bold text-orange mb-0">{{ polizas_por_vencer }}</h2>
+              <small class="text-muted">Requieren renovación</small>
             </div>
-            <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
-              <i class="fas fa-clock text-warning fs-4"></i>
+            <div class="bg-orange bg-opacity-10 p-3 rounded-circle">
+              <i class="fas fa-calendar-exclamation text-orange fs-4"></i>
             </div>
           </div>
-          <span class="small text-muted mt-3 d-block">Requieren atención inmediata</span>
         </div>
       </div>
     </div>
 
-    <!-- Facturación -->
+    <!-- Siniestros Liquidados -->
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #20c997 !important;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-uppercase text-muted small fw-bold mb-1">Liquidados</p>
+              <h2 class="fw-bold text-teal mb-0">{{ siniestros_liquidados }}</h2>
+              <small class="text-muted">Mes actual</small>
+            </div>
+            <div class="bg-teal bg-opacity-10 p-3 rounded-circle">
+              <i class="fas fa-check-circle text-teal fs-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actividad Hoy -->
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #6f42c1 !important;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-uppercase text-muted small fw-bold mb-1">Actividad Hoy</p>
+              <h2 class="fw-bold text-purple mb-0">{{ actividad_reciente.siniestros_hoy }}</h2>
+              <small class="text-muted">Siniestros reportados</small>
+            </div>
+            <div class="bg-purple bg-opacity-10 p-3 rounded-circle">
+              <i class="fas fa-chart-line text-purple fs-4"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Facturas -->
     <div class="col-md-3">
       <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #0d6efd !important;">
         <div class="card-body">
@@ -90,6 +183,7 @@
             <div>
               <p class="text-uppercase text-muted small fw-bold mb-1">Facturas</p>
               <h2 class="fw-bold text-primary mb-0">{{ total_facturas }}</h2>
+              <small class="text-muted">En sistema</small>
             </div>
             <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
               <i class="fas fa-file-invoice-dollar text-primary fs-4"></i>
@@ -103,12 +197,17 @@
     </div>
   </div>
 
-  <!-- Recent Activity Section -->
+  <!-- Main Content Row -->
   <div class="row">
+    <!-- Recent Activity Section -->
     <div class="col-lg-8">
-      <div class="card border-0 shadow-sm rounded-4">
+      <!-- Siniestros Recientes -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-header bg-white border-0 py-3">
-          <h5 class="fw-bold mb-0 text-dark">Actividad Reciente (Siniestros)</h5>
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark">📋 Siniestros Recientes</h5>
+            <a href="{% url 'siniestros' %}" class="btn btn-sm btn-outline-primary">Ver todos</a>
+          </div>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
@@ -151,24 +250,143 @@
           </div>
         </div>
       </div>
+
+      <!-- Reportes Externos Recientes -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark">📨 Reportes Externos Recientes</h5>
+            <a href="{% url 'reportes_externos_list' %}" class="btn btn-sm btn-outline-danger">Gestionar</a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          {% if reportes_externos_recientes %}
+            {% for reporte in reportes_externos_recientes %}
+            <div class="d-flex align-items-center p-3 border-bottom">
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h6 class="mb-1 fw-bold">Reporte #{{ reporte.id }}</h6>
+                    <p class="mb-1 text-muted small">{{ reporte.nombre_bien }} - {{ reporte.codigo_activo }}</p>
+                    <small class="text-muted">{{ reporte.fecha_reporte|date:"d M, Y H:i" }} • {{ reporte.nombre_reportante }}</small>
+                  </div>
+                  <div class="text-end">
+                    <span class="badge bg-{% if reporte.estado_proceso == 'RECIBIDO' %}danger{% else %}warning{% endif %}">
+                      {{ reporte.get_estado_proceso_display }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="ms-3">
+                <a href="{% url 'reporte_externo_detail' reporte.id %}" class="btn btn-sm btn-outline-primary">
+                  Revisar
+                </a>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-4 text-muted">
+              <i class="fas fa-envelope-open-text fa-2x mb-2"></i>
+              <p class="mb-0">No hay reportes externos recientes</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
-    <!-- System Status / Quick Links -->
+    <!-- Sidebar - Quick Actions & Info -->
     <div class="col-lg-4">
+      <!-- Accesos Directos -->
       <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body">
-          <h5 class="fw-bold mb-3">Accesos Directos</h5>
+          <h5 class="fw-bold mb-3">🚀 Accesos Directos</h5>
           <div class="d-grid gap-2">
+            <a href="{% url 'reportes_externos_list' %}" class="btn btn-light text-start p-3 border hover-shadow transition">
+              <i class="fas fa-envelope-open-text text-danger me-2"></i> 
+              <span class="fw-bold">Reportes Externos</span>
+              {% if reportes_externos_pendientes > 0 %}
+              <span class="badge bg-danger float-end">{{ reportes_externos_pendientes }}</span>
+              {% endif %}
+            </a>
+            <a href="{% url 'siniestros' %}" class="btn btn-light text-start p-3 border hover-shadow transition">
+              <i class="fas fa-car-crash text-warning me-2"></i> 
+              <span class="fw-bold">Gestionar Siniestros</span>
+            </a>
+            <a href="{% url 'polizas_list' %}" class="btn btn-light text-start p-3 border hover-shadow transition">
+              <i class="fas fa-shield-alt text-success me-2"></i> 
+              <span class="fw-bold">Pólizas</span>
+            </a>
             <a href="{% url 'custodios_list' %}" class="btn btn-light text-start p-3 border hover-shadow transition">
-              <i class="fas fa-users text-primary me-2"></i> Gestionar Custodios
+              <i class="fas fa-users text-primary me-2"></i> 
+              <span class="fw-bold">Custodios y Bienes</span>
+            </a>
+            <a href="{% url 'lista_facturas' %}" class="btn btn-light text-start p-3 border hover-shadow transition">
+              <i class="fas fa-file-invoice-dollar text-info me-2"></i> 
+              <span class="fw-bold">Facturación</span>
             </a>
             <a href="{% url 'lista_notificaciones' %}" class="btn btn-light text-start p-3 border hover-shadow transition">
-              <i class="fas fa-bell text-warning me-2"></i> Ver Notificaciones
+              <i class="fas fa-bell text-warning me-2"></i> 
+              <span class="fw-bold">Notificaciones</span>
+              {% if notificaciones_no_leidas > 0 %}
+              <span class="badge bg-warning float-end">{{ notificaciones_no_leidas }}</span>
+              {% endif %}
             </a>
           </div>
         </div>
       </div>
+
+      <!-- Información del Sistema -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3">📊 Información del Sistema</h5>
+          <div class="small">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Total Siniestros:</span>
+              <span class="fw-bold">{{ total_siniestros }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Tasa Liquidación:</span>
+              <span class="fw-bold text-success">
+                {% if total_siniestros > 0 %}
+                  {% widthratio siniestros_liquidados total_siniestros 100 %}%
+                {% else %}
+                  0%
+                {% endif %}
+              </span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Actividad Hoy:</span>
+              <span class="fw-bold">{{ actividad_reciente.siniestros_hoy }} siniestros</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Reportes Hoy:</span>
+              <span class="fw-bold text-danger">{{ actividad_reciente.reportes_hoy }}</span>
+            </div>
+          </div>
+          
+          <hr class="my-3">
+          
+          <div class="text-center">
+            <small class="text-muted">
+              <i class="fas fa-clock me-1"></i>
+              Última actualización: {% now "H:i" %}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
+
+<style>
+.text-orange { color: #fd7e14 !important; }
+.bg-orange { background-color: #fd7e14 !important; }
+.text-teal { color: #20c997 !important; }
+.bg-teal { background-color: #20c997 !important; }
+.text-purple { color: #6f42c1 !important; }
+.bg-purple { background-color: #6f42c1 !important; }
+.hover-shadow:hover { box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15) !important; }
+.transition { transition: all 0.2s ease-in-out; }
+</style>
 {% endblock %}

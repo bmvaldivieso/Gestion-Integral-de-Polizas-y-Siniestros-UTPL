@@ -1,0 +1,221 @@
+{% extends 'master/base.html' %}
+
+{% block title %}Detalle Reporte Externo #{{ reporte.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>📋 Detalle Reporte Externo #{{ reporte.id }}</h2>
+                <div>
+                    <span class="badge bg-{% if reporte.estado_proceso == 'RECIBIDO' %}danger{% elif reporte.estado_proceso == 'REVISADO' %}warning{% else %}success{% endif %} fs-6">
+                        {{ reporte.get_estado_proceso_display }}
+                    </span>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Datos del Reportante -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">👤 Datos del Reportante</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Nombre:</strong><br>
+                                {{ reporte.nombre_reportante }}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Email:</strong><br>
+                                <a href="mailto:{{ reporte.email_reportante }}">{{ reporte.email_reportante }}</a>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Teléfono:</strong><br>
+                                {{ reporte.telefono_reportante }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos del Bien -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">💻 Datos del Bien Reportado</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Nombre del Bien:</strong><br>
+                                {{ reporte.nombre_bien }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Código de Activo:</strong><br>
+                                <code>{{ reporte.codigo_activo }}</code>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <strong>Marca:</strong><br>
+                                {{ reporte.marca_bien|default:"No especificado" }}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Modelo:</strong><br>
+                                {{ reporte.modelo_bien|default:"No especificado" }}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Serie:</strong><br>
+                                {{ reporte.serie_bien|default:"No especificado" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos del Siniestro -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">⚠️ Detalles del Siniestro</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Fecha del Siniestro:</strong><br>
+                                {{ reporte.fecha_siniestro|date:"d/m/Y" }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Tipo de Siniestro:</strong><br>
+                                <span class="badge bg-{% if reporte.tipo_siniestro == 'DAÑOS' %}warning{% else %}danger{% endif %}">
+                                    {{ reporte.get_tipo_siniestro_display }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <strong>Ubicación del Siniestro:</strong><br>
+                                {{ reporte.ubicacion_siniestro }}
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <strong>Causa del Siniestro:</strong><br>
+                                <div class="border rounded p-3 bg-light">
+                                    {{ reporte.causa_siniestro|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custodio -->
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">👤 Responsable del Bien</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <strong>Nombre del Custodio:</strong><br>
+                                {{ reporte.nombre_custodio }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de Procesamiento -->
+                <div class="card mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">🔄 Información de Procesamiento</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Fecha de Recepción:</strong><br>
+                                {{ reporte.fecha_reporte|date:"d/m/Y H:i" }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Revisado por:</strong><br>
+                                {% if reporte.revisado_por %}
+                                    {{ reporte.revisado_por.get_full_name|default:reporte.revisado_por.username }}
+                                {% else %}
+                                    <span class="text-muted">No revisado aún</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if reporte.observaciones_admin %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <strong>Observaciones:</strong><br>
+                                    <div class="border rounded p-3 bg-light">
+                                        {{ reporte.observaciones_admin|linebreaks }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'reportes_externos_list' %}" class="btn btn-secondary">
+                                    ← Volver a la lista
+                                </a>
+                            </div>
+                            <div>
+                                {% if reporte.estado_proceso == 'RECIBIDO' %}
+                                    <button type="submit" name="action" value="convertir_siniestro" class="btn btn-success">
+                                        🔄 Convertir a Siniestro
+                                    </button>
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rechazarModal">
+                                        ❌ Rechazar Reporte
+                                    </button>
+                                {% elif reporte.estado_proceso == 'REVISADO' %}
+                                    <a href="{% url 'siniestro_detail' reporte.siniestro_creado.id %}" class="btn btn-primary">
+                                        👁️ Ver Siniestro Creado
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Rechazo -->
+                <div class="modal fade" id="rechazarModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Rechazar Reporte</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Motivo del rechazo:</label>
+                                    <textarea name="observaciones" class="form-control" rows="4" placeholder="Explique por qué se rechaza este reporte..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" name="action" value="rechazar" class="btn btn-danger">Rechazar Reporte</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

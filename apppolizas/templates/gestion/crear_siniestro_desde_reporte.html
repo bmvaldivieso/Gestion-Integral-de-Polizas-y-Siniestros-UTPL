@@ -1,0 +1,329 @@
+{% extends 'master/base.html' %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+<style>
+    /* Ajuste visual para Select2 */
+    .select2-container--bootstrap-5 .select2-selection { border-color: #dee2e6; }
+</style>
+{% endblock %}
+
+{% block title %}Crear Siniestro desde Reporte #{{ reporte.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>🔄 Crear Siniestro desde Reporte Externo</h2>
+                <div>
+                    <span class="badge bg-info fs-6">Reporte #{{ reporte.id }}</span>
+                </div>
+            </div>
+
+            <!-- Resumen del Reporte -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">📋 Resumen del Reporte Externo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Reportante:</strong> {{ reporte.nombre_reportante }}<br>
+                            <strong>Contacto:</strong> {{ reporte.email_reportante }} | {{ reporte.telefono_reportante }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Fecha Siniestro:</strong> {{ reporte.fecha_siniestro|date:"d/m/Y" }}<br>
+                            <strong>Tipo:</strong> {{ reporte.get_tipo_siniestro_display }}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <strong>Bien:</strong> {{ reporte.nombre_bien }}<br>
+                            <strong>Código:</strong> <code>{{ reporte.codigo_activo }}</code>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Custodio:</strong> {{ reporte.nombre_custodio }}<br>
+                            <strong>Ubicación:</strong> {{ reporte.ubicacion_siniestro }}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <strong>Causa:</strong><br>
+                            <div class="border rounded p-2 bg-light">
+                                {{ reporte.causa_siniestro|truncatechars:200 }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coincidencias Encontradas -->
+            {% if bien_coincidente or custodio_coincidente %}
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">✅ Coincidencias Encontradas</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if bien_coincidente %}
+                            <div class="alert alert-info">
+                                <strong>✓ Bien coincidente encontrado:</strong><br>
+                                {{ bien_coincidente.detalle }} (Código: {{ bien_coinciente.codigo }})<br>
+                                <small>Custodio actual: {{ bien_coincidente.custodio.nombre_completo }}</small>
+                            </div>
+                        {% endif %}
+                        {% if custodio_coincidente %}
+                            <div class="alert alert-info">
+                                <strong>✓ Custodio coincidente encontrado:</strong><br>
+                                {{ custodio_coincidente.nombre_completo }} ({{ custodio_coincidente.identificacion }})<br>
+                                <small>Departamento: {{ custodio_coincidente.departamento|default:"No especificado" }}</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">⚠️ Sin Coincidencias Automáticas</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">No se encontraron coincidencias exactas en la base de datos. Por favor, seleccione manualmente el bien y custodio correspondientes.</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Formulario de Siniestro -->
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">📝 Formulario de Siniestro</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.poliza.label }}</label>
+                                {{ form.poliza }}
+                                {% if form.poliza.errors %}
+                                    <div class="text-danger small">{{ form.poliza.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.custodio.label }}</label>
+                                {{ form.custodio }}
+                                {% if form.custodio.errors %}
+                                    <div class="text-danger small">{{ form.custodio.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.bien.label }}</label>
+                                <select id="id_bien_ajax" name="bien" class="form-control" required>
+                                    <option value="">Seleccione un bien...</option>
+                                </select>
+                                <input type="hidden" id="id_bien" name="bien" value="">
+                                {% if form.bien.errors %}
+                                    <div class="text-danger small">{{ form.bien.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.fecha_siniestro.label }}</label>
+                                {{ form.fecha_siniestro }}
+                                {% if form.fecha_siniestro.errors %}
+                                    <div class="text-danger small">{{ form.fecha_siniestro.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.tipo_siniestro.label }}</label>
+                                {{ form.tipo_siniestro }}
+                                {% if form.tipo_siniestro.errors %}
+                                    <div class="text-danger small">{{ form.tipo_siniestro.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.ubicacion_bien.label }}</label>
+                                {{ form.ubicacion_bien }}
+                                {% if form.ubicacion_bien.errors %}
+                                    <div class="text-danger small">{{ form.ubicacion_bien.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">{{ form.causa_siniestro.label }}</label>
+                                {{ form.causa_siniestro }}
+                                {% if form.causa_siniestro.errors %}
+                                    <div class="text-danger small">{{ form.causa_siniestro.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.valor_reclamo_estimado.label }}</label>
+                                {{ form.valor_reclamo_estimado }}
+                                {% if form.valor_reclamo_estimado.errors %}
+                                    <div class="text-danger small">{{ form.valor_reclamo_estimado.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.estado_tramite.label }}</label>
+                                {{ form.estado_tramite }}
+                                {% if form.estado_tramite.errors %}
+                                    <div class="text-danger small">{{ form.estado_tramite.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'reporte_externo_detail' reporte.id %}" class="btn btn-secondary">
+                                    ← Volver al Reporte
+                                </a>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    💾 Crear Siniestro
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    
+    // 1. Inicializar Select2 para el Custodio
+    $('#id_custodio').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Seleccione un custodio...'
+    });
+
+    // 2. Configurar el Buscador de Bienes con restricción por custodio
+    $('#id_bien_ajax').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Escriba el código del bien...',
+        allowClear: true,
+        minimumInputLength: 2,
+        width: '100%',
+        ajax: {
+            url: "{% url 'buscar_bienes_ajax' %}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    term: params.term,
+                    custodio_id: $('#id_custodio').val()  // Filtrar por custodio seleccionado
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data
+                };
+            },
+            cache: true
+        }
+    });
+
+    // 3. EVENTO: Cuando se selecciona un bien, actualizar el campo hidden
+    $('#id_bien_ajax').on('select2:select', function (e) {
+        var data = e.params.data;
+        $('#id_bien').val(data.id);
+    });
+
+    // 4. Si quitan la selección del bien, limpiar campo hidden
+    $('#id_bien_ajax').on('select2:clear', function (e) {
+        $('#id_bien').val('');
+    });
+
+    // 5. EVENTO CLAVE: Cuando cambia el custodio, limpiar y resetear el selector de bienes
+    $('#id_custodio').on('change', function() {
+        // Limpiar selección actual de bienes
+        $('#id_bien_ajax').val(null).trigger('change');
+        $('#id_bien').val('');
+        
+        // Forzar recarga de opciones vacías para que se filtren por el nuevo custodio
+        $('#id_bien_ajax').select2('destroy');
+        $('#id_bien_ajax').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Escriba el código del bien...',
+            allowClear: true,
+            minimumInputLength: 2,
+            width: '100%',
+            ajax: {
+                url: "{% url 'buscar_bienes_ajax' %}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        term: params.term,
+                        custodio_id: $('#id_custodio').val()  // Usar el nuevo valor del custodio
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data
+                    };
+                },
+                cache: true
+            }
+        });
+    });
+
+    // 6. Si hay un custodio preseleccionado (por coincidencias), inicializar el filtro
+    var custodioInicial = $('#id_custodio').val();
+    if (custodioInicial) {
+        $('#id_bien_ajax').select2('destroy');
+        $('#id_bien_ajax').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Escriba el código del bien...',
+            allowClear: true,
+            minimumInputLength: 2,
+            width: '100%',
+            ajax: {
+                url: "{% url 'buscar_bienes_ajax' %}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        term: params.term,
+                        custodio_id: custodioInicial
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data
+                    };
+                },
+                cache: true
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
