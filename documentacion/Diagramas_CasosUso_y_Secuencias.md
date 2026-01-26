@@ -38,6 +38,9 @@ Representación de la gestión de archivos binarios y la integración con servic
 
 Representación del flujo de cierre financiero. El diagrama modela la atomicidad de la operación "Liquidar siniestro", la cual encapsula reglas de negocio financieras y de integridad de datos mediante dependencias de inclusión, asegurando que no se procese ningún pago sin el documento de respaldo correspondiente.
 
+<img width="757" height="823" alt="image" src="https://github.com/user-attachments/assets/d337aad0-b244-457e-a406-60468dc9e597" />
+
+Los Reportes Externos permiten que usuarios no autenticados registren de forma preliminar un siniestro, ingresando información básica del reportante, del bien afectado y del incidente.
 
 
 # Especificación de Modelado de Casos de Uso
@@ -112,10 +115,36 @@ Módulo exclusivo para el rol de Administrador, enfocado en el mantenimiento de 
 * **Gestión de Usuarios:** Control total (Crear, Editar, Eliminar) sobre los accesos al sistema.
 * **Reportaría:** Generación de Reportes Generales en PDF. Este proceso incluye obligatoriamente la compilación de estadísticas globales (siniestros totales, montos pagados, etc.) para ofrecer una visión macro del estado del negocio.
 
+## 7. Reportes Externos (UC07)
+La funcionalidad de **Reportes Externos** permite que personas no autenticadas puedan informar la ocurrencia de un incidente o siniestro mediante un formulario web público, sin necesidad de contar con credenciales dentro del sistema.  
+Este mecanismo actúa como un canal de entrada preliminar al proceso formal de gestión de siniestros.
 
-DIAGRAMA DE CASOS DE USO
+### Actores Involucrados
 
-# Documentación de Diagramas de Secuencia
+- **Usuario Externo**: Persona ajena al sistema que registra un incidente proporcionando datos básicos del reportante, del bien afectado y del evento ocurrido.
+- **Analista**: Usuario interno responsable de revisar, validar y decidir el destino de los reportes externos.
+- **Sistema**: Componentes automatizados que realizan validaciones de datos y generan notificaciones automáticas.
+
+### Flujo General del Proceso
+
+1. El usuario externo envía un reporte a través del formulario público.  
+2. El sistema valida automáticamente los datos de entrada, como el formato del correo electrónico y el número telefónico.  
+3. Al registrarse un nuevo reporte, el sistema notifica automáticamente a los analistas.  
+4. El analista revisa los reportes pendientes y puede consultar su información detallada.  
+5. Tras la revisión, el analista puede:
+   - **Convertir el reporte en un siniestro formal**, integrándolo al flujo oficial del sistema.  
+   - **Rechazar el reporte**, registrando observaciones administrativas.  
+
+### Beneficios de la Funcionalidad
+
+- Facilita la recepción temprana de incidentes.  
+- Reduce barreras de acceso para usuarios externos.  
+- Garantiza control administrativo antes de crear siniestros formales.  
+- Asegura trazabilidad completa desde el reporte inicial hasta el siniestro generado.  
+
+ 
+
+# Documentación de los Diagramas de Secuencia
 
 ## 1. Diagrama de Secuencia: Autenticación de Usuario
 
@@ -350,6 +379,7 @@ Implementa CRUD completo para gestión de usuarios del sistema, accesible solo p
 * Todas las operaciones requieren autenticación.
 * Validaciones de integridad referencial.
 * CSRF exempt para API endpoints.
+
 
 
 
