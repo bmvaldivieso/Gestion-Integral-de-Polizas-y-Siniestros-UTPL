@@ -153,112 +153,143 @@ Esta estructura garantiza **mantenibilidad, testabilidad y escalabilidad** del c
 ## Capa de Presentación
 
 ### `views.py` - Controladores HTTP
-Contiene todas las vistas Django que manejan las solicitudes HTTP y respuestas (`views.py:1-30`).  
-Vistas principales:
-- **LoginView**: Maneja la autenticación de usuarios  
-- **DashboardAdminView / DashboardAnalistaView**: Paneles de control según rol  
-- **PolizaListView**: Gestión CRUD de pólizas  
-- **SiniestroListView**: Gestión de siniestros  
-- **FiniquitoCreateView**: Proceso de liquidación de siniestros  
+Contiene todas las vistas Django que manejan las solicitudes HTTP y respuestas, implementando el patrón MVC de Django.
 
-Cada vista implementa control de acceso basado en roles mediante `LoginRequiredMixin` y validación de `request.user.rol` (`views.py:85-91`).
+#### Vistas Principales
+- **LoginView**: Maneja autenticación universal con redirección según rol de usuario (*urls.py:16*).
+- **DashboardAdminView / DashboardAnalistaView**: Paneles especializados con diferentes niveles de acceso.
+- **PolizaListView**: Gestión CRUD completa de pólizas con paginación y filtros.
+- **SiniestroListView**: Procesamiento del ciclo de vida completo de siniestros.
+- **FiniquitoCreateView**: Liquidación final con cálculos automáticos y validaciones.
+
+#### Control de Acceso
+Cada vista implementa control de acceso basado en roles mediante `LoginRequiredMixin` y validación de `request.user.rol` en el método `dispatch()`.
+
+---
 
 ### `forms.py` - Validación de Entrada
-Proporciona validación de datos y configuración de widgets (`forms.py:18-79`).  
-Formularios clave:
-- **PolizaForm**: Validación de datos de pólizas con reglas de negocio  
-- **SiniestroForm**: Validación de integridad entre custodio y bien  
-- **FacturaForm**: Gestión de facturación  
-- **DocumentoSiniestroForm**: Subida de archivos  
+Proporciona validación de datos y configuración de widgets con reglas de negocio integradas.
+
+#### Formularios Clave
+- **PolizaForm**: Validación de datos financieros y relaciones entre entidades.
+- **SiniestroForm**: Validación de integridad referencial entre custodio y bien afectado.
+- **FacturaForm**: Gestión automática de cálculos de impuestos y descuentos.
+- **DocumentoSiniestroForm**: Subida segura de archivos con validación de tipo y tamaño.
+
+---
+
+### `urls.py` - Enrutamiento
+Configurado en `apppolizas/urls.py`, define las rutas que mapean URLs a vistas específicas, organizando el acceso a cada funcionalidad del sistema con patrones de URL claros y agrupados por módulo funcional  
+*urls.py:1-41*.
 
 ---
 
 ## Capa de Lógica de Negocio
 
 ### `services.py` - Orquestación de Reglas de Negocio
-Encapsula toda la lógica de negocio (`services.py:72-135`).  
-Servicios principales:
-- **AuthService**: Autenticación dual (sesión y JWT) (`services.py:21-70`)  
-- **PolizaService**: Gestión del ciclo de vida de pólizas con validaciones financieras  
-- **SiniestroService**: Procesamiento de siniestros con reglas de negocio  
-- **DocumentoService**: Validación y subida de archivos con restricciones de seguridad  
+Encapsula toda la lógica de negocio mediante clases de servicio estáticas que implementan el patrón **Service Layer**.
 
-Validaciones críticas:
-- `prima_total >= prima_base` (`services.py:80-84`)  
-- Generación de notificaciones automáticas (`services.py:88-103`)  
+#### Servicios Principales
+- **AuthService**: Autenticación dual (sesión para web y JWT para API) con validación de credenciales y roles.
+- **PolizaService**: Gestión del ciclo de vida de pólizas con validaciones financieras.
+- **SiniestroService**: Procesamiento de siniestros con máquina de estados y reglas de negocio.
+- **DocumentoService**: Validación y subida de archivos con restricciones de seguridad.
+- **FiniquitoService**: Liquidación con transacciones atómicas y cálculos financieros.
+
+#### Validaciones Críticas
+- Validación financiera: `prima_total >= prima_base`.
+- Generación automática de notificaciones al crear pólizas.
+- Validación de póliza activa antes de crear siniestro.
 
 ---
 
 ## Capa de Acceso a Datos
 
 ### `repositories.py` - Abstracción de Base de Datos
-Patrón **Repository** para acceso a datos mediante clases estáticas (`repositories.py:47-75`).  
-Repositorios implementados:
-- **PolizaRepository**: Operaciones CRUD para pólizas  
-- **SiniestroRepository**: Consultas especializadas de siniestros  
-- **UsuarioRepository**: Manejo de usuarios  
-- **DocumentoRepository**: Integración con MinIO para almacenamiento de archivos  
+Implementa el patrón **Repository** para acceso a datos mediante clases estáticas que encapsulan operaciones CRUD y consultas especializadas.
 
-Cada repositorio encapsula consultas Django ORM y maneja excepciones `DoesNotExist` (`repositories.py:55-59`).
+#### Repositorios Implementados
+- **PolizaRepository**: Operaciones CRUD con ordenamiento por fecha de registro.
+- **SiniestroRepository**: Consultas especializadas por póliza y creación controlada.
+- **UsuarioRepository**: Manejo de autenticación y gestión de usuarios.
+- **DocumentoRepository**: Integración con MinIO para almacenamiento de archivos.
+
+Cada repositorio encapsula consultas Django ORM y maneja excepciones `DoesNotExist` de forma centralizada.
 
 ---
 
 ## Modelos de Dominio
 
 ### `models.py` - Definición de Entidades
-Define la estructura de datos y relaciones (`models.py:173-202`).  
-Entidades principales:
-- **Usuario**: Extiende `AbstractUser` con roles específicos (`models.py:14-35`)  
-- **Poliza**: Entidad central con relaciones a aseguradora, broker y usuario gestor  
-- **Siniestro**: Vinculado a póliza, custodio y bien afectado (`models.py:219-300`)  
-- **Bien**: Activos fijos con validación de límite por custodio (`models.py:96-165`)  
+Define la estructura de datos y relaciones con validaciones integradas.
+
+#### Entidades Principales
+- **Usuario**: Extiende `AbstractUser` con roles específicos del dominio (ADMINISTRADOR, ANALISTA, GERENTE, SOLICITANTE).
+- **Poliza**: Entidad central con relaciones a aseguradora, broker y usuario gestor.
+- **Siniestro**: Vinculado a póliza, custodio y bien afectado con máquina de estados.
+- **Bien**: Activos fijos con validación de límite por custodio.
+
+---
 
 ### `migrations/` - Evolución del Esquema
-Gestiona la evolución de la base de datos (`0001_initial.py:268-322`).  
-Define la creación inicial de todas las tablas con sus relaciones y restricciones.
+Gestiona la evolución de la base de datos mediante migraciones Django que definen la creación inicial de todas las tablas con sus relaciones y restricciones.
 
 ---
 
 ## Configuración del Proyecto
 
 ### `settings.py` - Configuración Central
-Define conexiones a bases de datos y servicios externos.  
-Configuraciones clave:
-- **MySQL**: Base de datos principal con modo transaccional estricto  
-- **MinIO**: Almacenamiento de objetos compatible con S3 para documentos  
-- **Middleware**: Pipeline de procesamiento de solicitudes  
-- **Autenticación**: Configuración dual (sesión + JWT)  
+Define conexiones a bases de datos y servicios externos, proporcionando un punto único de configuración para todo el sistema  
+*settings.py:79-91*.
+
+#### Configuraciones Clave
+- **MySQL**: Base de datos principal con modo transaccional estricto `STRICT_TRANS_TABLES` (*settings.py:87-89*).
+- **MinIO**: Almacenamiento de objetos compatible con S3 para documentos.
+- **Middleware**: Pipeline de procesamiento de solicitudes con seguridad y autenticación.
+- **Autenticación**: Configuración dual (sesión + JWT) con modelo de usuario personalizado.
+
+---
+
+### `manage.py` - Utilidad de Administración
+Script de Django para tareas administrativas como migraciones, creación de superusuario y ejecución del servidor de desarrollo  
+*manage.py:8-19*.
 
 ---
 
 ## Dependencias Externas
 
-- **MySQL**: Base de datos relacional principal con modo estricto `STRICT_TRANS_TABLES`  
-- **MinIO**: Almacenamiento S3-compatible para documentos de siniestros en el bucket `expedientes-siniestros`  
+### MySQL
+Base de datos relacional principal con modo estricto `STRICT_TRANS_TABLES` para garantizar integridad de datos.
+
+### MinIO
+Almacenamiento S3-compatible para documentos de siniestros en el bucket `expedientes-siniestros` con configuración de acceso público  
+*settings.py:149-170*.
 
 ---
 
 ## Flujo de Dependencias y Reglas de Arquitectura
+El sistema aplica dependencias unidireccionales estrictas:
 
-El sistema **enforce dependencias unidireccionales estrictas**:
+- **Views → Services**: Las vistas solo llaman métodos de servicio, nunca repositorios directamente.
+- **Services → Repositories**: Los servicios orquestan operaciones a través de repositorios.
+- **Repositories → Models**: Los repositorios encapsulan toda interacción con Django ORM.
+- **Models → MySQL/MinIO**: Los modelos persisten datos en sistemas externos.
 
-- **Views → Services**: Las vistas solo llaman métodos de servicio, nunca repositorios directamente  
-- **Services → Repositories**: Los servicios orquestan operaciones a través de repositorios  
-- **Repositories → Models**: Los repositorios encapsulan toda interacción con Django ORM  
-- **Models → MySQL/MinIO**: Los modelos persisten datos en sistemas externos  
-
-Esto garantiza **separación de concerns** y facilita pruebas unitarias mediante mocks de dependencias.
+Esto garantiza separación de *concerns* y facilita pruebas unitarias mediante *mocks* de dependencias.
 
 ---
 
-## Notes
+## Notas
 
+### Ventajas Arquitectónicas
 La estructura modular del sistema permite:
-- **Escalabilidad horizontal**  
-- **Mantenimiento simplificado**  
-- **Responsabilidades bien definidas por capa**  
 
-La arquitectura impide accesos directos no autorizados a la base de datos desde las vistas o uso del ORM desde los servicios.
+- **Escalabilidad horizontal**: Cada capa puede escalarse independientemente.
+- **Mantenimiento simplificado**: Responsabilidades bien definidas por capa.
+- **Testabilidad**: Dependencias inyectadas facilitan pruebas unitarias.
+- **Integridad arquitectónica**: Impide accesos directos no autorizados a la base de datos desde las vistas o uso del ORM desde los servicios.
+
+
 
 
 
