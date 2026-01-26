@@ -1,0 +1,187 @@
+{% extends 'master/base.html' %}
+
+{% block title %}Reportes Externos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>📨 Reportes Externos Pendientes</h2>
+                <div>
+                    <span class="badge bg-danger fs-6">{{ reportes_pendientes }} Pendientes</span>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Lista de Reportes Externos</h5>
+                </div>
+                <div class="card-body">
+                    {% if reportes %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Fecha</th>
+                                        <th>Reportante</th>
+                                        <th>Bien</th>
+                                        <th>Código Activo</th>
+                                        <th>Tipo Siniestro</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reporte in reportes %}
+                                    <tr>
+                                        <td><strong>#{{ reporte.id }}</strong></td>
+                                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ reporte.nombre_reportante }}</td>
+                                        <td>{{ reporte.nombre_bien|truncatechars:30 }}</td>
+                                        <td><code>{{ reporte.codigo_activo }}</code></td>
+                                        <td>
+                                            <span class="badge bg-{% if reporte.tipo_siniestro == 'DAÑOS' %}warning{% else %}danger{% endif %}">
+                                                {{ reporte.get_tipo_siniestro_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if reporte.estado_proceso == 'RECIBIDO' %}danger{% elif reporte.estado_proceso == 'REVISADO' %}warning{% else %}success{% endif %}">
+                                                {{ reporte.get_estado_proceso_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'reporte_externo_detail' reporte.id %}" class="btn btn-sm btn-primary">
+                                                👁️ Revisar
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        {% if is_paginated %}
+                            <nav>
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <h5 class="text-muted">📭 No hay reportes externos pendientes</h5>
+                            <p class="text-muted">Todos los reportes han sido procesados.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reportes Procesados -->
+<div class="container-fluid mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">📋 Historial de Reportes Procesados</h5>
+                </div>
+                <div class="card-body">
+                    {% if reportes_procesados %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Fecha</th>
+                                        <th>Reportante</th>
+                                        <th>Bien</th>
+                                        <th>Código Activo</th>
+                                        <th>Tipo Siniestro</th>
+                                        <th>Estado Final</th>
+                                        <th>Revisado por</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reporte in reportes_procesados %}
+                                    <tr>
+                                        <td><strong>#{{ reporte.id }}</strong></td>
+                                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ reporte.nombre_reportante }}</td>
+                                        <td>{{ reporte.nombre_bien|truncatechars:30 }}</td>
+                                        <td><code>{{ reporte.codigo_activo }}</code></td>
+                                        <td>
+                                            <span class="badge bg-{% if reporte.tipo_siniestro == 'DAÑOS' %}warning{% elif reporte.tipo_siniestro == 'ROBO_HURTO' %}danger{% elif reporte.tipo_siniestro == 'INCENDIO' %}orange{% elif reporte.tipo_siniestro == 'PERDIDA_TOTAL' %}dark{% else %}info{% endif %}">
+                                                {{ reporte.get_tipo_siniestro_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if reporte.estado_proceso == 'RECHAZADO' %}danger{% else %}success{% endif %}">
+                                                {{ reporte.get_estado_proceso_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if reporte.revisado_por %}
+                                                {{ reporte.revisado_por.get_full_name|default:reporte.revisado_por.username }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'reporte_externo_detail' reporte.id %}" class="btn btn-sm btn-outline-primary">
+                                                👁️ Ver Detalles
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <h6 class="text-muted">📭 No hay reportes procesados</h6>
+                            <p class="text-muted small">Los reportes rechazados o convertidos aparecerán aquí.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

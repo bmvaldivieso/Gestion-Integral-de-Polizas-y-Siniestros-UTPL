@@ -429,6 +429,7 @@ class Notificacion(models.Model):
         ("PAGO_PENDIENTE", "Pago por Realizar"),
         ("SINIESTRO_DEMORA_DOC", "Retraso Documentación Siniestro"),
         ("SINIESTRO_RESPUESTA_ASEG", "Retraso Respuesta Aseguradora"),
+        ("REPORTE_EXTERNO", "Nuevo Reporte Externo"),
         ("OTRO", "Otro"),
     ]
 
@@ -491,6 +492,81 @@ class DocumentoSiniestro(models.Model):
 def eliminar_archivo_de_minio(sender, instance, **kwargs):
     if instance.archivo:
         instance.archivo.delete(save=False)
+
+
+# ========================================================
+# 9. SISTEMA DE REPORTES EXTERNOS
+# ========================================================
+
+
+class ReporteExterno(models.Model):
+    """Almacena reportes de siniestros realizados por usuarios externos"""
+    
+    # Datos del Reportante
+    nombre_reportante = models.CharField(max_length=150)
+    email_reportante = models.EmailField()
+    telefono_reportante = models.CharField(max_length=15)
+    
+    # Datos del Bien (información proporcionada por el reportante)
+    nombre_bien = models.CharField(max_length=200, verbose_name="Nombre del bien")
+    codigo_activo = models.CharField(max_length=50, verbose_name="Código de activo")
+    marca_bien = models.CharField(max_length=100, blank=True, null=True)
+    modelo_bien = models.CharField(max_length=100, blank=True, null=True)
+    serie_bien = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Datos del Siniestro
+    fecha_siniestro = models.DateField()
+    tipo_siniestro = models.CharField(
+        max_length=50,
+        choices=[
+            ("DAÑOS", "Daños"),
+            ("ROBO_HURTO", "Robo/Hurto"),
+            ("INCENDIO", "Incendio"),
+            ("PERDIDA_TOTAL", "Pérdida Total"),
+            ("DAÑO_LEVE", "Daño Leve")
+        ]
+    )
+    ubicacion_siniestro = models.CharField(max_length=255)
+    causa_siniestro = models.TextField()
+    
+    # Identificación del Custodio
+    nombre_custodio = models.CharField(max_length=150, verbose_name="Nombre del custodio")
+    
+    # Control del proceso
+    fecha_reporte = models.DateTimeField(auto_now_add=True)
+    estado_proceso = models.CharField(
+        max_length=20,
+        choices=[
+            ("RECIBIDO", "Recibido"),
+            ("REVISADO", "Revisado"),
+            ("CONVERTIDO", "Convertido a Siniestro"),
+            ("RECHAZADO", "Rechazado")
+        ],
+        default="RECIBIDO"
+    )
+    
+    # Relación opcional con el siniestro creado (después de conversión)
+    siniestro_creado = models.OneToOneField(
+        Siniestro, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name="reporte_origen"
+    )
+    
+    # Campos para validación y seguimiento
+    observaciones_admin = models.TextField(blank=True, null=True)
+    revisado_por = models.ForeignKey(
+        Usuario, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name="reportes_revisados"
+    )
+    fecha_revision = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Reporte #{self.id} - {self.nombre_bien}"
 
 
 @receiver(post_delete, sender=DocumentoPoliza)
