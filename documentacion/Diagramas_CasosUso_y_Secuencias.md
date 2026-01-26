@@ -380,6 +380,53 @@ Implementa CRUD completo para gestión de usuarios del sistema, accesible solo p
 * Validaciones de integridad referencial.
 * CSRF exempt para API endpoints.
 
+## 7. Diagrama de Secuencia: Reportes Externos
+
+<img width="1133" height="1477" alt="image" src="https://github.com/user-attachments/assets/70ab3c46-dbec-4959-947a-bd37f20e0d48" />
+
+## Propósito
+Este diagrama documenta el flujo de **reportes externos** del sistema, manejando la captura de incidentes por usuarios no autenticados y su procesamiento por analistas internos  
+*(views.py:1255-1280)*.
+
+## Actores y Componentes
+
+- **UsuarioExterno**: Cliente web que reporta incidentes sin autenticación.  
+- **ReporteExternoView**: Controlador que maneja `GET/POST` del formulario público  
+  *(views.py:1255-1280)*.  
+- **ReporteExternoForm**: Formulario con validaciones específicas de email y teléfono  
+  *(forms.py:503-557)*.  
+- **ReporteExterno**: Modelo que almacena los datos del reporte con estado de proceso  
+  *(models.py:502-570)*.  
+- **Notificacion**: Sistema que alerta a analistas sobre nuevos reportes.  
+- **Analista**: Usuario interno que procesa los reportes recibidos.  
+
+## Flujo Principal
+
+1. El usuario externo accede vía `GET` a **/reportar-siniestro/**  
+   *(urls.py:44)*.  
+2. `ReporteExternoView` muestra el formulario vacío.  
+3. El usuario envía datos vía `POST` al mismo endpoint.  
+4. `ReporteExternoForm` valida los campos, incluyendo:
+   - Email (debe contener `@`).  
+   - Teléfono (mínimo 7 dígitos).  
+   *(forms.py:547-557)*.  
+5. Si la validación es exitosa:
+   - Se crea el **ReporteExterno** con estado `RECIBIDO` y fecha automática.  
+   - Se generan notificaciones automáticas para todos los usuarios con rol **analista**.  
+   - Se redirige a una página de confirmación.  
+6. Los analistas pueden revisar la lista de reportes y tomar acciones:
+   - **Convertir a siniestro**.  
+   - **Rechazar el reporte**.  
+
+## Reglas de Negocio
+
+- Todos los campos del formulario son obligatorios, excepto **marca, modelo y serie del bien**.  
+- El **email** debe contener el símbolo `@` para ser válido.  
+- El **teléfono** debe tener al menos **7 dígitos**.  
+- El reporte se crea automáticamente con estado **RECIBIDO**.  
+- Solo los **analistas** pueden procesar reportes externos.  
+- Transiciones de estado permitidas:  
+  - `RECIBIDO → REVISADO → CONVERTIDO / RECHAZADO`.  
 
 
 
