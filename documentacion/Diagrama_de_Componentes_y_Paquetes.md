@@ -1,39 +1,143 @@
 # Diagramade Componentes
-<img width="1080" height="990" alt="image" src="https://github.com/user-attachments/assets/db006228-b996-4aae-b8b7-dd898bef2f67" />
+<img width="2265" height="2094" alt="image" src="https://github.com/user-attachments/assets/03f34947-7f8d-4b1e-8fbc-3d7381155c4a" />
 
 # Descripción del Diagrama de Componentes
-El diagrama representa la arquitectura de 3 capas del sistema de gestión integral de pólizas y siniestros, implementada con Django siguiendo patrones de diseño estrictos.
+El sistema implementa una **arquitectura de tres capas estricta** con separación de responsabilidades, construida sobre el framework **Django**.  
+Esta estructura garantiza **mantenibilidad, testabilidad y escalabilidad** del código mediante dependencias unidireccionales controladas.
 
-## Arquitectura General y Flujo
-El sistema sigue un flujo unidirectional donde el cliente envía solicitudes HTTP que atraviesan las capas en orden: **Presentación** → **Negocio** → **Datos**. Esta separación garantiza que cada capa tenga responsabilidades bien definidas sin violar las dependencias.
+---
 
-### Capa de Presentación
-- **Views**: Clases como `LoginView`, `PolizaListView`, `SiniestroListView` manejan solicitudes HTTP y coordinan con la capa de negocio. Implementan validación de formularios y control de acceso mediante `LoginRequiredMixin` y verificación de roles en el método `dispatch()`.
-  
-- **URL Routing**: Configurado en `apppolizas/urls.py`, define las rutas que mapean URLs a vistas específicas, organizando el acceso a cada funcionalidad del sistema.
-  
-- **Templates**: Archivos HTML que renderizan la interfaz de usuario, recibiendo contexto desde las vistas para mostrar datos y formularios.
+## Flujo de Comunicación
+El sistema sigue un flujo unidireccional donde las solicitudes HTTP atraviesan las capas en orden:
 
-### Capa de Negocio (Services)
-- **AuthService**: Gestiona autenticación dual (sesiones para web y JWT para API) con validación de credenciales y roles.
-  
-- **PolizaService**: Implementa lógica de negocio para gestión de pólizas, incluyendo validaciones de negocio y generación automática de notificaciones.
-  
-- **SiniestroService**: Orquesta el flujo completo de siniestros, validando reglas de negocio como que la póliza esté activa antes de crear un siniestro.
-  
-- **FiniquitoService**: Procesa liquidaciones con cálculos financieros y transacciones atómicas para garantizar consistencia de datos.
+**Presentación → Negocio → Datos → Persistencia**
 
-### Capa de Datos
-- **Models**: Entidades como `Usuario`, `Poliza`, `Siniestro` definen la estructura de datos con relaciones y validaciones.
-  
-- **Repositories**: Clases como `PolizaRepository` y `SiniestroRepository` abstraen el acceso a datos, encapsulando operaciones CRUD e interacción con el ORM de Django.
-  
-- **Database**: MySQL como motor de base de datos con configuración de modo transaccional estricto.
+Esta separación garantiza que cada capa tenga responsabilidades bien definidas sin violar las dependencias  
+
+---
+
+## Capa de Presentación
+
+### Controladores HTTP (`views.py`)
+Las vistas Django manejan solicitudes HTTP y coordinan con la capa de negocio:
+
+- **LoginView**: Maneja autenticación universal con redirección por rol (*views.py:1-55*).
+- **DashboardAdminView / DashboardAnalistaView**: Paneles especializados según rol de usuario.
+- **PolizaListView**: Gestión CRUD completa de pólizas con validaciones.
+- **SiniestroListView**: Procesamiento del ciclo de vida de siniestros.
+- **FiniquitoCreateView**: Liquidación final con cálculos automáticos.
+
+Cada vista implementa control de acceso mediante `LoginRequiredMixin` y validación de `request.user.rol` en el método `dispatch()`  
+
+---
+
+### Enrutamiento (`urls.py`)
+Configurado en `apppolizas/urls.py`, define las rutas que mapean URLs a vistas específicas, organizando el acceso a cada funcionalidad del sistema con patrones de URL claros y agrupados por módulo funcional  
+
+---
+
+### Validación de Entrada (`forms.py`)
+Proporciona validación de datos y configuración de widgets con reglas de negocio integradas:
+
+- **PolizaForm**: Validación de datos financieros y relaciones.
+- **SiniestroForm**: Validación de integridad entre custodio y bien.
+- **FacturaForm**: Gestión de cálculos automáticos de impuestos.
+- **DocumentoSiniestroForm**: Subida segura de archivos con restricciones  
+
+---
+
+### Interfaz Administrativa
+Django Admin proporciona gestión directa de datos con clases `Admin` personalizadas para cada entidad del dominio, permitiendo operaciones CRUD avanzadas para administradores  
+
+---
+
+## Capa de Negocio (`services.py`)
+
+### Orquestación de Reglas de Negocio
+Encapsula toda la lógica de negocio mediante clases de servicio estáticas:
+
+#### AuthService
+- **login_universal()**: Autenticación web con sesiones Django (*services.py:30-46*).
+- **login_analista()**: JWT para API con expiración de 2 horas (*services.py:49-74*).
+
+#### PolizaService
+- Validación: `prima_total >= prima_base` (*services.py:87-88*).
+- Generación automática de notificaciones al crear pólizas (*services.py:93-107*).
+
+#### SiniestroService
+- Validación de póliza activa antes de crear siniestro (*services.py:160-163*).
+- Notificaciones automáticas al registrar nuevos siniestros (*services.py:168-179*).
+
+#### FiniquitoService
+- Fórmula: `valor_final = valor_reclamo - deducible - depreciacion` (*services.py:361-365*).
+- Transacciones atómicas para garantizar consistencia (*services.py:381-391*).
+
+#### DocumentoService
+- Extensiones permitidas: **PDF, JPG, JPEG, PNG** (*services.py:233-235*).
+- Tamaño máximo: **5MB** con validación de tipo MIME (*services.py:254-262*).
+
+---
+
+## Capa de Acceso a Datos (`repositories.py`)
+
+### Patrón Repository
+Implementa abstracción de base de datos mediante clases estáticas que encapsulan operaciones CRUD y consultas especializadas:
+
+- **PolizaRepository**: Operaciones CRUD con ordenamiento por fecha de registro.
+- **SiniestroRepository**: Consultas especializadas por póliza y creación controlada.
+- **DocumentoRepository**: Integración con MinIO para almacenamiento de archivos.
+- **UsuarioRepository**: Manejo de autenticación y gestión de usuarios.
+
+Cada repositorio encapsula consultas Django ORM y maneja excepciones `DoesNotExist` de forma centralizada.
+
+---
+
+## Capa de Persistencia
+
+### Modelos de Dominio (`models.py`)
+Define la estructura de datos con relaciones y validaciones:
+
+- **Usuario**: Extiende `AbstractUser` con roles específicos del dominio.
+- **Poliza**: Entidad central con relaciones a aseguradora, broker y usuario gestor.
+- **Siniestro**: Vinculado a póliza, custodio y bien afectado con máquina de estados.
+- **Bien**: Activos fijos con validación de límite por custodio.
+
+---
+
+### Base de Datos
+MySQL como motor principal con configuración de modo transaccional estricto `STRICT_TRANS_TABLES` para garantizar integridad de datos.
+
+---
 
 ## Servicios Externos
-- **MinIO**: Almacenamiento de objetos S3-compatible para documentos y evidencias de siniestros, configurado mediante `django-storages`.
-  
-- **Email**: Servicio de notificaciones automáticas integrado en la capa de negocio para alertas de facturación y eventos del sistema.
+
+### MinIO
+Almacenamiento de objetos S3-compatible para documentos y evidencias:
+
+- **Bucket**: `expedientes-siniestros` configurado como público.
+- Rutas dinámicas por ID de siniestro para organización.
+- Configurado mediante `django-storages`.
+
+### Email
+Servicio de notificaciones automáticas integrado en la capa de negocio para alertas de facturación, vencimientos y eventos del sistema.
+
+---
+
+## Patrones Arquitectónicos Implementados
+
+### Dependencias Unidireccionales
+El sistema aplica dependencias estrictas:
+
+- **Views → Services**: Las vistas solo llaman métodos de servicio.
+- **Services → Repositories**: Los servicios orquestan operaciones.
+- **Repositories → Models**: Los repositorios encapsulan ORM.
+- **Models → Sistemas Externos**: Persistencia en MySQL y MinIO.
+
+---
+
+### Configuración Centralizada
+`settings.py` define conexiones a bases de datos, servicios externos, middleware y autenticación dual, proporcionando un punto único de configuración para todo el sistema.
+
 
   
 # Diagrama de Paquetes
@@ -155,6 +259,7 @@ La estructura modular del sistema permite:
 - **Responsabilidades bien definidas por capa**  
 
 La arquitectura impide accesos directos no autorizados a la base de datos desde las vistas o uso del ORM desde los servicios.
+
 
 
 
