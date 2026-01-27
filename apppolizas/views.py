@@ -11,9 +11,9 @@ from django.db.models import Count, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
 from django.views.generic import DetailView, ListView, TemplateView, View
 from xhtml2pdf import pisa
 
@@ -188,14 +188,14 @@ class DashboardAdminView(LoginRequiredMixin, TemplateView):
         # -----------------------------
         # Reportes Externos Pendientes (solo para analistas)
         # -----------------------------
-        if self.request.user.rol == 'analista':
+        if self.request.user.rol == "analista":
             context["reportes_externos_pendientes"] = ReporteExterno.objects.filter(
-                estado_proceso='RECIBIDO'
+                estado_proceso="RECIBIDO"
             ).count()
 
             context["reportes_externos_recientes"] = ReporteExterno.objects.filter(
-                estado_proceso__in=['RECIBIDO', 'REVISADO']
-            ).order_by('-fecha_reporte')[:5]
+                estado_proceso__in=["RECIBIDO", "REVISADO"]
+            ).order_by("-fecha_reporte")[:5]
         else:
             context["reportes_externos_pendientes"] = 0
             context["reportes_externos_recientes"] = []
@@ -232,56 +232,64 @@ class DashboardAnalistaView(LoginRequiredMixin, TemplateView):
         context["ultimos_siniestros"] = SiniestroService.listar_todos().order_by(
             "-fecha_siniestro"
         )[:5]
-        
+
         # -----------------------------
         # Reportes Externos Pendientes para Analistas
         # -----------------------------
         context["reportes_externos_pendientes"] = ReporteExterno.objects.filter(
-            estado_proceso='RECIBIDO'
+            estado_proceso="RECIBIDO"
         ).count()
 
         context["reportes_externos_recientes"] = ReporteExterno.objects.filter(
-            estado_proceso__in=['RECIBIDO', 'REVISADO']
-        ).order_by('-fecha_reporte')[:3]
-        
+            estado_proceso__in=["RECIBIDO", "REVISADO"]
+        ).order_by("-fecha_reporte")[:3]
+
         # -----------------------------
         # Datos Adicionales para Dashboard Enriquecido (usando Servicios)
         # -----------------------------
         # Estadísticas de siniestros (usando estados reales del modelo)
         todos_siniestros = SiniestroService.listar_todos()
         context["siniestros_pendientes"] = todos_siniestros.filter(
-            estado_tramite__in=['REPORTADO', 'DOCUMENTACION', 'ENVIADO_ASEGURADORA', 'REPARACION']
+            estado_tramite__in=[
+                "REPORTADO",
+                "DOCUMENTACION",
+                "ENVIADO_ASEGURADORA",
+                "REPARACION",
+            ]
         ).count()
         context["siniestros_liquidados"] = todos_siniestros.filter(
-            estado_tramite='LIQUIDADO'
+            estado_tramite="LIQUIDADO"
         ).count()
-        
+
         # Custodios y bienes (usando servicios)
         context["total_custodios"] = CustodioService.listar_custodios().count()
         # Para bienes activos, necesitamos acceso directo ya que no hay servicio específico
-        context["total_bienes"] = Bien.objects.filter(estado_operativo='ACTIVO').count()
-        
+        context["total_bienes"] = Bien.objects.filter(estado_operativo="ACTIVO").count()
+
         # Notificaciones no leídas (usando servicio)
-        context["notificaciones_no_leidas"] = NotificacionService.contar_no_leidas(self.request.user)
-        
+        context["notificaciones_no_leidas"] = NotificacionService.contar_no_leidas(
+            self.request.user
+        )
+
         # Actividad reciente del sistema
         context["actividad_reciente"] = {
-            'siniestros_hoy': todos_siniestros.filter(
+            "siniestros_hoy": todos_siniestros.filter(
                 fecha_siniestro=timezone.now().date()
             ).count(),
-            'reportes_hoy': ReporteExterno.objects.filter(
+            "reportes_hoy": ReporteExterno.objects.filter(
                 fecha_reporte__date=timezone.now().date()
             ).count(),
         }
-        
+
         # Próximos vencimientos (30 días) - usando servicio de polizas
         from datetime import timedelta
+
         context["polizas_por_vencer"] = Poliza.objects.filter(
             estado=True,
             vigencia_fin__gte=timezone.now().date(),
-            vigencia_fin__lte=timezone.now().date() + timedelta(days=30)
+            vigencia_fin__lte=timezone.now().date() + timedelta(days=30),
         ).count()
-        
+
         return context
 
 
@@ -1252,185 +1260,203 @@ class ReporteGeneralPDFView(LoginRequiredMixin, View):
 # VISTAS DE REPORTE EXTERNO
 # ========================================================
 
+
 class ReporteExternoView(View):
     """Vista pública para que usuarios externos reporten siniestros"""
-    template_name = 'reporte_externo.html'
-    
+
+    template_name = "reporte_externo.html"
+
     def get(self, request):
         form = ReporteExternoForm()
-        return render(request, self.template_name, {'form': form})
-    
+        return render(request, self.template_name, {"form": form})
+
     def post(self, request):
         form = ReporteExternoForm(request.POST)
         if form.is_valid():
             reporte = form.save()
-            
+
             # Crear notificación solo para analistas
-            usuarios_analistas = Usuario.objects.filter(rol='analista')
+            usuarios_analistas = Usuario.objects.filter(rol="analista")
             for usuario in usuarios_analistas:
                 Notificacion.objects.create(
                     usuario=usuario,
                     mensaje=f"Nuevo reporte externo #{reporte.id}: {reporte.nombre_bien}",
                     tipo_alerta="REPORTE_EXTERNO",
-                    id_referencia=str(reporte.id)
-                )          
-            messages.success(request, "Reporte enviado correctamente. Nos contactaremos pronto.")
-            return redirect('reporte_externo_confirmacion')
-        
-        return render(request, self.template_name, {'form': form})
+                    id_referencia=str(reporte.id),
+                )
+            messages.success(
+                request, "Reporte enviado correctamente. Nos contactaremos pronto."
+            )
+            return redirect("reporte_externo_confirmacion")
+
+        return render(request, self.template_name, {"form": form})
 
 
 class ReporteExternoConfirmacionView(TemplateView):
     """Página de confirmación después de enviar reporte"""
-    template_name = 'reporte_externo_confirmacion.html'
+
+    template_name = "reporte_externo_confirmacion.html"
 
 
 class ListaReportesExternosView(LoginRequiredMixin, ListView):
     """Vista para analistas ver reportes externos"""
+
     model = ReporteExterno
-    template_name = 'gestion/reportes_externos_list.html'
-    context_object_name = 'reportes'
+    template_name = "gestion/reportes_externos_list.html"
+    context_object_name = "reportes"
     paginate_by = 20
-    
+
     def dispatch(self, request, *args, **kwargs):
         # Permitir acceso solo a analistas
-        if request.user.rol != 'analista':
-            return redirect('dashboard_admin')
+        if request.user.rol != "analista":
+            return redirect("dashboard_admin")
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get_queryset(self):
         return ReporteExterno.objects.filter(
-            estado_proceso__in=['RECIBIDO', 'REVISADO']
-        ).order_by('-fecha_reporte')
-    
+            estado_proceso__in=["RECIBIDO", "REVISADO"]
+        ).order_by("-fecha_reporte")
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['reportes_pendientes'] = ReporteExterno.objects.filter(
-            estado_proceso='RECIBIDO'
+        context["reportes_pendientes"] = ReporteExterno.objects.filter(
+            estado_proceso="RECIBIDO"
         ).count()
-        
+
         # Agregar reportes procesados (rechazados y convertidos)
-        context['reportes_procesados'] = ReporteExterno.objects.filter(
-            estado_proceso__in=['RECHAZADO', 'CONVERTIDO']
-        ).order_by('-fecha_reporte')
-        
+        context["reportes_procesados"] = ReporteExterno.objects.filter(
+            estado_proceso__in=["RECHAZADO", "CONVERTIDO"]
+        ).order_by("-fecha_reporte")
+
         return context
 
 
 class DetalleReporteExternoView(LoginRequiredMixin, DetailView):
     """Vista para analistas revisar detalles de un reporte externo"""
+
     model = ReporteExterno
-    template_name = 'gestion/reporte_externo_detail.html'
-    context_object_name = 'reporte'
-    
+    template_name = "gestion/reporte_externo_detail.html"
+    context_object_name = "reporte"
+
     def dispatch(self, request, *args, **kwargs):
         # Permitir acceso solo a analistas
-        if request.user.rol != 'analista':
-            return redirect('dashboard_admin')
+        if request.user.rol != "analista":
+            return redirect("dashboard_admin")
         return super().dispatch(request, *args, **kwargs)
-    
+
     def post(self, request, *args, **kwargs):
         reporte = self.get_object()
-        action = request.POST.get('action')
-        
-        if action == 'convertir_siniestro':
+        action = request.POST.get("action")
+
+        if action == "convertir_siniestro":
             # Marcar como revisado y redirigir a creación de siniestro
-            reporte.estado_proceso = 'REVISADO'
+            reporte.estado_proceso = "REVISADO"
             reporte.revisado_por = request.user
             reporte.fecha_revision = timezone.now()
             reporte.save()
-            
+
             messages.success(request, f"Reporte #{reporte.id} marcado para conversión.")
-            return redirect(f'/siniestros/crear-desde-reporte/{reporte.id}/')
-            
-        elif action == 'rechazar':
-            reporte.estado_proceso = 'RECHAZADO'
-            reporte.observaciones_admin = request.POST.get('observaciones', '')
+            return redirect(f"/siniestros/crear-desde-reporte/{reporte.id}/")
+
+        elif action == "rechazar":
+            reporte.estado_proceso = "RECHAZADO"
+            reporte.observaciones_admin = request.POST.get("observaciones", "")
             reporte.revisado_por = request.user
             reporte.fecha_revision = timezone.now()
             reporte.save()
             messages.success(request, "Reporte rechazado correctamente.")
-            
-        return redirect('reportes_externos_list')
+
+        return redirect("reportes_externos_list")
 
 
 class CrearSiniestroDesdeReporteView(LoginRequiredMixin, View):
     """Convierte un reporte externo en un siniestro formal - Solo para analistas"""
-    
+
     def dispatch(self, request, *args, **kwargs):
         # Permitir acceso solo a analistas
-        if request.user.rol != 'analista':
-            return redirect('dashboard_admin')
+        if request.user.rol != "analista":
+            return redirect("dashboard_admin")
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get(self, request, reporte_id):
         reporte = get_object_or_404(ReporteExterno, id=reporte_id)
-        
+
         # Buscar coincidencias en la base de datos
         bien_coincidente = None
         custodio_coincidente = None
-        
+
         if reporte.codigo_activo:
             bien_coincidente = Bien.objects.filter(codigo=reporte.codigo_activo).first()
-        
+
         if reporte.nombre_custodio:
             custodio_coincidente = ResponsableCustodio.objects.filter(
                 nombre_completo__icontains=reporte.nombre_custodio
             ).first()
-        
+
         # Preparar formulario de siniestro con datos del reporte
         initial_data = {
-            'fecha_siniestro': reporte.fecha_siniestro,
-            'tipo_siniestro': reporte.tipo_siniestro,
-            'ubicacion_bien': reporte.ubicacion_siniestro,
-            'causa_siniestro': reporte.causa_siniestro,
+            "fecha_siniestro": reporte.fecha_siniestro,
+            "tipo_siniestro": reporte.tipo_siniestro,
+            "ubicacion_bien": reporte.ubicacion_siniestro,
+            "causa_siniestro": reporte.causa_siniestro,
         }
-        
+
         # Si hay coincidencias, precargarlas
         if bien_coincidente:
-            initial_data['bien'] = bien_coincidente.id
+            initial_data["bien"] = bien_coincidente.id
         if custodio_coincidente:
-            initial_data['custodio'] = custodio_coincidente.id
-        
+            initial_data["custodio"] = custodio_coincidente.id
+
         form = SiniestroForm(initial=initial_data)
-        
-        return render(request, 'gestion/crear_siniestro_desde_reporte.html', {
-            'form': form,
-            'reporte': reporte,
-            'bien_coincidente': bien_coincidente,
-            'custodio_coincidente': custodio_coincidente,
-        })
-    
+
+        return render(
+            request,
+            "gestion/crear_siniestro_desde_reporte.html",
+            {
+                "form": form,
+                "reporte": reporte,
+                "bien_coincidente": bien_coincidente,
+                "custodio_coincidente": custodio_coincidente,
+            },
+        )
+
     def post(self, request, reporte_id):
         reporte = get_object_or_404(ReporteExterno, id=reporte_id)
         form = SiniestroForm(request.POST)
-        
+
         if form.is_valid():
             with transaction.atomic():
                 # Crear siniestro
                 siniestro = form.save(commit=False)
                 siniestro.usuario_gestor = request.user
                 siniestro.save()
-                
+
                 # Actualizar reporte
-                reporte.estado_proceso = 'CONVERTIDO'
+                reporte.estado_proceso = "CONVERTIDO"
                 reporte.siniestro_creado = siniestro
                 reporte.revisado_por = request.user
                 reporte.fecha_revision = timezone.now()
                 reporte.save()
-                
+
                 # Crear notificación de conversión
                 Notificacion.objects.create(
                     usuario=request.user,
                     mensaje=f"Reporte #{reporte.id} convertido a siniestro #{siniestro.id}",
                     tipo_alerta="OTRO",
-                    id_referencia=str(siniestro.id)
+                    id_referencia=str(siniestro.id),
                 )
-                
-                messages.success(request, f"Siniestro {siniestro.id} creado correctamente desde reporte externo.")
-                return redirect('siniestro_detail', pk=siniestro.id)
-        
-        return render(request, 'admin/crear_siniestro_desde_reporte.html', {
-            'form': form,
-            'reporte': reporte,
-        })
+
+                messages.success(
+                    request,
+                    f"Siniestro {siniestro.id} creado correctamente desde reporte externo.",
+                )
+                return redirect("siniestro_detail", pk=siniestro.id)
+
+        return render(
+            request,
+            "admin/crear_siniestro_desde_reporte.html",
+            {
+                "form": form,
+                "reporte": reporte,
+            },
+        )

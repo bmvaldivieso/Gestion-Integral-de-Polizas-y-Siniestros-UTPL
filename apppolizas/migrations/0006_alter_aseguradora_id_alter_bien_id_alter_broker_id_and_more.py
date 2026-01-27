@@ -8,98 +8,190 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('apppolizas', '0005_bien_ubicacion'),
+        ("apppolizas", "0005_bien_ubicacion"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='aseguradora',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="aseguradora",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='bien',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="bien",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='broker',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="broker",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='documentopoliza',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="documentopoliza",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='documentosiniestro',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="documentosiniestro",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='factura',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="factura",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='finiquito',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="finiquito",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='notificacion',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="notificacion",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='notificacion',
-            name='tipo_alerta',
-            field=models.CharField(choices=[('VENCIMIENTO_POLIZA', 'Vencimiento de Póliza'), ('PAGO_PENDIENTE', 'Pago por Realizar'), ('SINIESTRO_DEMORA_DOC', 'Retraso Documentación Siniestro'), ('SINIESTRO_RESPUESTA_ASEG', 'Retraso Respuesta Aseguradora'), ('REPORTE_EXTERNO', 'Nuevo Reporte Externo'), ('OTRO', 'Otro')], max_length=50),
+            model_name="notificacion",
+            name="tipo_alerta",
+            field=models.CharField(
+                choices=[
+                    ("VENCIMIENTO_POLIZA", "Vencimiento de Póliza"),
+                    ("PAGO_PENDIENTE", "Pago por Realizar"),
+                    ("SINIESTRO_DEMORA_DOC", "Retraso Documentación Siniestro"),
+                    ("SINIESTRO_RESPUESTA_ASEG", "Retraso Respuesta Aseguradora"),
+                    ("REPORTE_EXTERNO", "Nuevo Reporte Externo"),
+                    ("OTRO", "Otro"),
+                ],
+                max_length=50,
+            ),
         ),
         migrations.AlterField(
-            model_name='poliza',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="poliza",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='responsablecustodio',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="responsablecustodio",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='siniestro',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="siniestro",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='usuario',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="usuario",
+            name="id",
+            field=models.BigAutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.CreateModel(
-            name='ReporteExterno',
+            name="ReporteExterno",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nombre_reportante', models.CharField(max_length=150)),
-                ('email_reportante', models.EmailField(max_length=254)),
-                ('telefono_reportante', models.CharField(max_length=15)),
-                ('nombre_bien', models.CharField(max_length=200, verbose_name='Nombre del bien')),
-                ('codigo_activo', models.CharField(max_length=50, verbose_name='Código de activo')),
-                ('marca_bien', models.CharField(blank=True, max_length=100, null=True)),
-                ('modelo_bien', models.CharField(blank=True, max_length=100, null=True)),
-                ('serie_bien', models.CharField(blank=True, max_length=100, null=True)),
-                ('fecha_siniestro', models.DateField()),
-                ('tipo_siniestro', models.CharField(choices=[('DAÑOS', 'Daños'), ('ROBO_HURTO', 'Robo/Hurto')], max_length=50)),
-                ('ubicacion_siniestro', models.CharField(max_length=255)),
-                ('causa_siniestro', models.TextField()),
-                ('nombre_custodio', models.CharField(max_length=150, verbose_name='Nombre del custodio')),
-                ('fecha_reporte', models.DateTimeField(auto_now_add=True)),
-                ('estado_proceso', models.CharField(choices=[('RECIBIDO', 'Recibido'), ('REVISADO', 'Revisado'), ('CONVERTIDO', 'Convertido a Siniestro'), ('RECHAZADO', 'Rechazado')], default='RECIBIDO', max_length=20)),
-                ('observaciones_admin', models.TextField(blank=True, null=True)),
-                ('fecha_revision', models.DateTimeField(blank=True, null=True)),
-                ('revisado_por', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reportes_revisados', to=settings.AUTH_USER_MODEL)),
-                ('siniestro_creado', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reporte_origen', to='apppolizas.siniestro')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("nombre_reportante", models.CharField(max_length=150)),
+                ("email_reportante", models.EmailField(max_length=254)),
+                ("telefono_reportante", models.CharField(max_length=15)),
+                (
+                    "nombre_bien",
+                    models.CharField(max_length=200, verbose_name="Nombre del bien"),
+                ),
+                (
+                    "codigo_activo",
+                    models.CharField(max_length=50, verbose_name="Código de activo"),
+                ),
+                ("marca_bien", models.CharField(blank=True, max_length=100, null=True)),
+                (
+                    "modelo_bien",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
+                ("serie_bien", models.CharField(blank=True, max_length=100, null=True)),
+                ("fecha_siniestro", models.DateField()),
+                (
+                    "tipo_siniestro",
+                    models.CharField(
+                        choices=[("DAÑOS", "Daños"), ("ROBO_HURTO", "Robo/Hurto")],
+                        max_length=50,
+                    ),
+                ),
+                ("ubicacion_siniestro", models.CharField(max_length=255)),
+                ("causa_siniestro", models.TextField()),
+                (
+                    "nombre_custodio",
+                    models.CharField(
+                        max_length=150, verbose_name="Nombre del custodio"
+                    ),
+                ),
+                ("fecha_reporte", models.DateTimeField(auto_now_add=True)),
+                (
+                    "estado_proceso",
+                    models.CharField(
+                        choices=[
+                            ("RECIBIDO", "Recibido"),
+                            ("REVISADO", "Revisado"),
+                            ("CONVERTIDO", "Convertido a Siniestro"),
+                            ("RECHAZADO", "Rechazado"),
+                        ],
+                        default="RECIBIDO",
+                        max_length=20,
+                    ),
+                ),
+                ("observaciones_admin", models.TextField(blank=True, null=True)),
+                ("fecha_revision", models.DateTimeField(blank=True, null=True)),
+                (
+                    "revisado_por",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="reportes_revisados",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "siniestro_creado",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="reporte_origen",
+                        to="apppolizas.siniestro",
+                    ),
+                ),
             ],
         ),
     ]

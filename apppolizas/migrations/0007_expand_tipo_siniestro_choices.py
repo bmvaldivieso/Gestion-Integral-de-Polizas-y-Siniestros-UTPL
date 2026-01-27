@@ -6,13 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('apppolizas', '0006_alter_aseguradora_id_alter_bien_id_alter_broker_id_and_more'),
+        (
+            "apppolizas",
+            "0006_alter_aseguradora_id_alter_bien_id_alter_broker_id_and_more",
+        ),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='reporteexterno',
-            name='tipo_siniestro',
-            field=models.CharField(choices=[('DAÑOS', 'Daños'), ('ROBO_HURTO', 'Robo/Hurto'), ('INCENDIO', 'Incendio'), ('PERDIDA_TOTAL', 'Pérdida Total'), ('DAÑO_LEVE', 'Daño Leve')], max_length=50),
+            model_name="reporteexterno",
+            name="tipo_siniestro",
+            field=models.CharField(
+                choices=[
+                    ("DAÑOS", "Daños"),
+                    ("ROBO_HURTO", "Robo/Hurto"),
+                    ("INCENDIO", "Incendio"),
+                    ("PERDIDA_TOTAL", "Pérdida Total"),
+                    ("DAÑO_LEVE", "Daño Leve"),
+                ],
+                max_length=50,
+            ),
         ),
     ]
